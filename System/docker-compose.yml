@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -7,15 +5,24 @@ services:
     ports:
       - "80:80"
   
-  backend:
+  dataconnector:
     build:
-      context: ./Backend/
+      context: ./DataConnector/
     ports:
       - "5000:5000"
     depends_on:
       - database
     environment:
       - POSTGRES_PW=${POSTGRES_PW}
+
+  scheduler:
+    build:
+      context: ./Scheduler/
+      dockerfile: Dockerfile.${ENV}
+    ports:
+      - "5001:5000"
+    depends_on:
+      - dataconnector
 
   database:
     build:
