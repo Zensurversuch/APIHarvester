@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 # Backend Flask
 
 # Byte-compiled / optimized / DLL files
@@ -106,3 +108,4 @@ dist
 stats.html
 
 .eslintcache
+>>>>>>> origin/main
