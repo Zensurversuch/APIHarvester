@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./Frontend/
+    ports:
+      - "80:80"
+  
+  backend:
+    build:
+      context: ./Backend/
+    ports:
+      - "5000:5000"
+    depends_on:
+      - database
+    environment:
+      - POSTGRES_PW=${POSTGRES_PW}
+
+  database:
+    build:
+      context: ./Database/
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PW}
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
