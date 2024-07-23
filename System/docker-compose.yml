@@ -13,7 +13,9 @@ services:
     depends_on:
       - database
     environment:
-      - POSTGRES_PW=${POSTGRES_PW}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PW}
+      POSTGRES_DB: postgres
 
   scheduler:
     build:
