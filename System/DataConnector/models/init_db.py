@@ -1,5 +1,6 @@
-from app import app, db
-from flask_migrate import upgrade
+# models/init_db.py
 
-with app.app_context():
-    upgrade()
+from .models import db, User
+
+# Add all models to the module's export list
+__all__ = ['db', 'User']
