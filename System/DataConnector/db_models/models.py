@@ -13,13 +13,13 @@ class User(Base):
     lastName = Column(String(50), nullable=False)
     firstName = Column(String(50), nullable=False)
     role = Column(Enum(UserRole), nullable=False)
-    lastLoggin = Column(DateTime, nullable=True)
+    lastLogin = Column(DateTime, nullable=True)
 
 
 class Subscriptions(Base):
     __tablename__ = 'subscriptions'
 
-    subscriptionsID = Column(Integer, primary_key=True, autoincrement=True)
+    subscriptionID = Column(Integer, primary_key=True, autoincrement=True)
     userID = Column(Integer, ForeignKey('users.userID'), nullable=False)
     apiType = Column(String(50), nullable=False)
     interval = Column(Integer, nullable=False)
@@ -28,8 +28,8 @@ class Subscriptions(Base):
 
 class AvailableApis(Base):
     __tablename__ = 'availableApis'
-    
-    availableApisID = Column(Integer, primary_key=True, autoincrement=True)
+
+    availableApiID = Column(Integer, primary_key=True, autoincrement=True)
     description = Column(String(200), nullable=False)
     subscriptionType = Column(Enum(SubscriptionType), nullable=False)
 

@@ -2,12 +2,14 @@ services:
   frontend:
     build:
       context: ./Frontend/
+    restart: always
     ports:
       - "80:80"
   
   dataconnector:
     build:
       context: ./DataConnector/
+    restart: always
     ports:
       - "5000:5000"
     depends_on:
@@ -23,6 +25,7 @@ services:
     build:
       context: ./Scheduler/
       dockerfile: Dockerfile.${ENV}
+    restart: always
     ports:
       - "5001:5000"
     depends_on:
@@ -30,7 +33,7 @@ services:
 
   database:
     image: postgres:15
-    # restart: always
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
