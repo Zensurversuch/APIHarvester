@@ -2,34 +2,41 @@ services:
   frontend:
     build:
       context: ./Frontend/
+    restart: always
     ports:
       - "80:80"
   
   dataconnector:
     build:
       context: ./DataConnector/
+    restart: always
     ports:
       - "5000:5000"
     depends_on:
       - database
     environment:
-      - POSTGRES_PW=${POSTGRES_PW}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      USER_EMAIL: ${USER_EMAIL}
+      USER_PASSWORD: ${USER_PASSWORD}
 
   scheduler:
     build:
       context: ./Scheduler/
       dockerfile: Dockerfile.${ENV}
+    restart: always
     ports:
       - "5001:5000"
     depends_on:
       - dataconnector
 
   database:
-    build:
-      context: ./Database/
+    image: postgres:15
+    restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PW}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
