@@ -1,10 +1,10 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import hashlib
 import time
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 from db_models.models import Base, User
 from repositories import userRepository
 from flask_cors import CORS
@@ -40,6 +40,7 @@ def login():
     print(user)
     if user and (hashedPassword == user.password):
         access_token = create_access_token(identity=user.userID, expires_delta=timedelta(hours=1))
+        userRepo.updateUserLastLogin(user.userID, datetime.now())
         return jsonify(access_token=access_token, userID = user.userID, role = user.role.value), 200
     else:
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Incorrect user name or password"}), 401
