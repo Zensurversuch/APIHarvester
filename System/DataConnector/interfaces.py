@@ -14,3 +14,13 @@ class SubscriptionType(Enum):
 
     def __str__(self):
         return self.name
+    
+
+class ApiStatusMessages(Enum):
+    SUCCESS = "SUCCESS: "
+    WARNING = "WARNING: "
+    ERROR = "ERORR: "
+
+    def __str__(self):
+        return self.value
+    

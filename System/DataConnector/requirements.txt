@@ -3,4 +3,5 @@ SQLAlchemy==2.0.31
 psycopg2-binary==2.9.9
 python-dotenv==1.0.0
 flask_jwt_extended==4.6.0
+flask-cors==3.0.10
 
