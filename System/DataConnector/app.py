@@ -13,7 +13,6 @@ from interfaces import UserRole, ApiStatusMessages
 from influxdb_client import InfluxDBClient, Point, BucketRetentionRules
 from influxdb_client.client.write_api import SYNCHRONOUS
 from influxdb_client.client import bucket_api
-from datetime import datetime
 
 app = Flask(__name__)
 
