@@ -1,6 +1,6 @@
 from sqlalchemy import DateTime, Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import declarative_base
-from interfaces import UserRole, SubscriptionType
+from interfaces import UserRole, SubscriptionType, SubscriptionStatus
 
 Base = declarative_base()
 
@@ -16,20 +16,21 @@ class User(Base):
     lastLogin = Column(DateTime, nullable=True)
 
 
-class Subscriptions(Base):
+class Subscription(Base):
     __tablename__ = 'subscriptions'
 
     subscriptionID = Column(Integer, primary_key=True, autoincrement=True)
     userID = Column(Integer, ForeignKey('users.userID'), nullable=False)
-    apiType = Column(String(50), nullable=False)
+    availableApiID = Column(Integer, ForeignKey('availableApi.availableApiID'), nullable=False)
     interval = Column(Integer, nullable=False)
-    status = Column(String(50), nullable=False)
+    status = Column(Enum(SubscriptionStatus), nullable=False)
 
 
-class AvailableApis(Base):
-    __tablename__ = 'availableApis'
+class AvailableApi(Base):
+    __tablename__ = 'availableApi'
 
     availableApiID = Column(Integer, primary_key=True, autoincrement=True)
+    url = Column(String(200), nullable=False)
     description = Column(String(200), nullable=False)
     subscriptionType = Column(Enum(SubscriptionType), nullable=False)
 

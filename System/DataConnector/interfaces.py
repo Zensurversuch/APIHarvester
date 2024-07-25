@@ -23,4 +23,12 @@ class ApiStatusMessages(Enum):
 
     def __str__(self):
         return self.value
+
+class SubscriptionStatus(Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    ERROR = "ERORR"
+
+    def __str__(self):
+        return self.name
     
