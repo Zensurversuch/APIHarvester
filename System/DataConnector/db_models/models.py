@@ -5,7 +5,7 @@ from interfaces import UserRole, SubscriptionType, SubscriptionStatus
 Base = declarative_base()
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = 'user'
 
     userID = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(50), nullable=False)
@@ -15,16 +15,33 @@ class User(Base):
     role = Column(Enum(UserRole), nullable=False)
     lastLogin = Column(DateTime, nullable=True)
 
+    def to_dict(self):
+        return {
+            'userID': self.userID,
+            'email': self.email,
+            'lastName': self.lastName,
+            'firstName': self.firstName,
+            'role': self.role.name,  
+            'lastLogin': self.lastLogin.isoformat() if self.lastLogin else None,
+        }
 
 class Subscription(Base):
-    __tablename__ = 'subscriptions'
+    __tablename__ = 'subscription'
 
     subscriptionID = Column(Integer, primary_key=True, autoincrement=True)
-    userID = Column(Integer, ForeignKey('users.userID'), nullable=False)
+    userID = Column(Integer, ForeignKey('user.userID'), nullable=False)
     availableApiID = Column(Integer, ForeignKey('availableApi.availableApiID'), nullable=False)
     interval = Column(Integer, nullable=False)
     status = Column(Enum(SubscriptionStatus), nullable=False)
 
+    def to_dict(self):
+        return {
+            'subscriptionID': self.subscriptionID,
+            'userID': self.userID,
+            'availableApiID': self.availableApiID,
+            'interval': self.interval,
+            'status': self.status.name, 
+        }
 
 class AvailableApi(Base):
     __tablename__ = 'availableApi'
@@ -33,4 +50,13 @@ class AvailableApi(Base):
     url = Column(String(200), nullable=False)
     description = Column(String(200), nullable=False)
     subscriptionType = Column(Enum(SubscriptionType), nullable=False)
+
+    def to_dict(self):
+        return {
+            'availableApiID': self.availableApiID,
+            'url': self.url,
+            'description': self.description,
+            'subscriptionType': self.subscriptionType.name, 
+        }
+
 

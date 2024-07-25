@@ -5,11 +5,11 @@ from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from db_models.models import Base, User
-from repositories import userRepository
+from db_models.models import Base, User, Subscription, AvailableApi
+from repositories import userRepository, subscriptionRepository
 from flask_cors import CORS
 from os import getenv
-from interfaces import UserRole, ApiStatusMessages
+from interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
 
 app = Flask(__name__)
 
@@ -24,8 +24,9 @@ CORS(app)
 
 engine = create_engine(POSTGRES_URL)
 userRepo = userRepository.UserRepository(engine)
+subscriptionRepository = subscriptionRepository.SubscriptionRepository(engine)
 
-# -------------------------- User Routes ------------------------------------------------------------------------------------------------------------------------------------------
+# -------------------------- User Routes ----------------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/login', methods=['POST'])
 def login():
     if not request.is_json:
@@ -37,7 +38,6 @@ def login():
     if not dataEmail or not dataPassword:
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing email or password"}), 400
     user = userRepo.getUserByEmail(dataEmail)
-    print(user)
     if user and (hashedPassword == user.password):
         access_token = create_access_token(identity=user.userID, expires_delta=timedelta(hours=1))
         return jsonify(access_token=access_token, userID = user.userID, role = user.role.value), 200
@@ -64,6 +64,15 @@ def createUser():
     
     return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.SUCCESS}User created successfully"}), 201
 
+# -------------------------- Subscription Routes -------------------------------------------------------------------------------------------------------------------------------------------------
+@app.route('/subscriptions', methods=['GET'])
+def subscriptions():
+    subscriptions = subscriptionRepository.getSubscriptions()
+    if subscriptions is not None:
+        subscriptionsDict = [subscription.to_dict() for subscription in subscriptions]
+        return jsonify(subscriptionsDict), 200
+    else:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}No subscriptions found"}), 404
 
 @app.route('/hello')
 def hello():
@@ -98,7 +107,22 @@ def initialize_database():
             firstName = 'First1',
             role=UserRole.ADMIN
             )
+
+            availableApi = AvailableApi( availableApiID =1,
+                                    url = "Test",
+                                    description = "Test",
+                                    subscriptionType = SubscriptionType.FREE)
+            	
+
+            subscription = Subscription( userID = 1,
+                                         availableApiID = 1,
+                                         interval = 5, 
+                                         status = SubscriptionStatus.ACTIVE) 
+            
             session.add(user)
+            session.add(availableApi)
+            session.commit()
+            session.add(subscription)
             session.commit()
             print("Admin user created successfully.")
         else:

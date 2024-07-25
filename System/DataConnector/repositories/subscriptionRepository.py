@@ -32,6 +32,18 @@ class SubscriptionRepository:
             return None
         finally:
             session.close()
+    
+    def getSubscriptionsByStatus(self, paramSubscriptionStatus):
+        try:
+            session = scoped_session(self.session_factory)
+            subscriptions = session.query(Subscription).filter(Subscription.status == paramSubscriptionStatus).first()
+            return subscriptions
+        except SQLAlchemyError as e:
+            print(f"SubscriptionRepository: An error occurred while fetching subscriptions with status {paramSubscriptionStatus}: {e}")
+            session.rollback()
+            return None
+        finally:
+            session.close()
 
     def createSubscription(self, paramUserID, paramavalableApiID, paramInterval, paramSubscriptionStatus):
         try:
@@ -44,7 +56,7 @@ class SubscriptionRepository:
             session.commit()
             return True
         except SQLAlchemyError as e:
-            print(f"UserRepository: An error occurred while creating the subscription: {e}")
+            print(f"SubscriptionRepository: An error occurred while creating the subscription: {e}")
             session.rollback()
             return False
         finally:
@@ -54,12 +66,14 @@ class SubscriptionRepository:
         try:
             session = scoped_session(self.session_factory)
             subscription = session.query(Subscription).filter(Subscription.subscriptionID == paramSubscriptionID).first()
-            if subscription:
-                return user
-            return None
+            if subscription is None:
+                print(f"SubscriptionRepository: No subscription found with ID {paramSubscriptionID}")
+                return False
+            subscription.status = paramSubscriptionStatus
+            return True
         except SQLAlchemyError as e:
-            print(f"UserRepository: An error occurred while fetching user with Email {paramEmail}: {e}")
+            print(f"SubscriptionRepository: An error occurred while updating the subscriptionStatus for subscriptionID {paramSubscriptionID}: {e}")
             session.rollback()
-            return None
+            return False
         finally:
             session.close()
