@@ -68,3 +68,19 @@ class UserRepository:
             return None
         finally:
             session.close()
+
+    def updateUserLastLogin(self, paramUserID, paramLastLogin):
+        try:
+            session = scoped_session(self.session_factory)
+            user = session.query(User).filter(User.userID == paramUserID).first()
+
+            if user is None:
+                print(f"UserRepository: No user found with ID {paramUserID}")
+                return
+            user.lastLogin = paramLastLogin
+            session.commit()
+        except SQLAlchemyError as e:
+            print(f"UserRepository: An error occurred while updating the last login for user ID {paramUserID}: {e}")
+            session.rollback()
+        finally:
+            session.close()

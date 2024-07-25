@@ -4,18 +4,18 @@ from role_permissions import getPermissionsForRole
 from flask import jsonify
 from interfaces import ApiStatusMessages
 
-def permission_check(user_repo):
+def permission_check(userRepo):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             function_name = func.__name__
             currentUserID = get_jwt_identity()
-            user = user_repo.get_user_by_id(currentUserID)
+            user = userRepo.getUserByID(currentUserID)
 
             if(user):
                 currentRole = user.role
             else:
-                return jsonify({"AuthenticationError": "Benutzer existiert nicht"}), 401
+                return jsonify({"AuthenticationError": "User does not exist"}), 401
 
             currentPermissions = set(getPermissionsForRole(currentRole))
 
