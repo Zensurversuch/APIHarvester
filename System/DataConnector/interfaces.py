@@ -9,8 +9,8 @@ class UserRole(Enum):
         return self.name
 
 class SubscriptionType(Enum):
-    FREE = "Free"
-    PREMIUM = "Premium"
+    FREE = "FREE"
+    PREMIUM = "PREMIUM"
 
     def __str__(self):
         return self.name

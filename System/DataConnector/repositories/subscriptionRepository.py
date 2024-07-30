@@ -1,7 +1,6 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from db_models.models import Subscription
-from interfaces import SubscriptionStatus
 
 class SubscriptionRepository:
     def __init__(self, engine):
@@ -27,7 +26,7 @@ class SubscriptionRepository:
             subscription = session.query(Subscription).filter(Subscription.subscriptionID == paramSubscriptionID).first()
             return subscription
         except SQLAlchemyError as e:
-            print(f"SubscriptionRepository: An error occurred while fetching user with ID {paramSubscriptionID}: {e}")
+            print(f"SubscriptionRepository: An error occurred while fetching subscription with ID {paramSubscriptionID}: {e}")
             session.rollback()
             return None
         finally:

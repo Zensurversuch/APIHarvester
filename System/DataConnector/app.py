@@ -6,7 +6,7 @@ from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from db_models.models import Base, User, Subscription, AvailableApi
-from repositories import userRepository, subscriptionRepository
+from repositories import userRepository, subscriptionRepository, availableApiRepository
 from flask_cors import CORS
 from os import getenv
 from interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
@@ -37,7 +37,8 @@ CORS(app)
 # Postgres Init
 engine = create_engine(POSTGRES_URL)
 userRepo = userRepository.UserRepository(engine)
-subscriptionRepository = subscriptionRepository.SubscriptionRepository(engine)
+subscriptionRepo = subscriptionRepository.SubscriptionRepository(engine)
+availableApiRepo = availableApiRepository.AvailableApiRepository(engine)
 
 # Influx Init
 client = InfluxDBClient(url=influxdbUrl, token=influxdbToken, org=influxdbOrg)
@@ -87,16 +88,11 @@ def createUser():
 
     return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.SUCCESS}User created successfully"}), 201
 
-@app.route('/hello')
-def hello():
-    return 'Hello, World from DataConnector!'
-
-
 
 # -------------------------- PostgreSQL Subscription Routes -------------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/subscriptions', methods=['GET'])
 def subscriptions():
-    subscriptions = subscriptionRepository.getSubscriptions()
+    subscriptions = subscriptionRepo.getSubscriptions()
     if subscriptions is not None:
         subscriptionsDict = [subscription.toDict() for subscription in subscriptions]
         return jsonify(subscriptionsDict), 200
@@ -105,7 +101,7 @@ def subscriptions():
     
 @app.route('/subscription/<int:subscriptionID>', methods=['GET'])
 def subscription(subscriptionID):
-    subscription = subscriptionRepository.getSubscriptionByID(subscriptionID)
+    subscription = subscriptionRepo.getSubscriptionByID(subscriptionID)
     if subscription is not None:
         return jsonify(subscription.toDict()), 200
     else:
@@ -113,7 +109,12 @@ def subscription(subscriptionID):
 
 @app.route('/subscriptionsByStatus/<string:subscriptionStatus>', methods=['GET'])
 def subscriptionsByStatus(subscriptionStatus):
-    subscriptions = subscriptionRepository.getSubscriptionsByStatus(subscriptionStatus)
+    try:
+        # Attempt to match the status with the Enum
+        validSubscriptionStatus = SubscriptionStatus(subscriptionStatus)
+    except ValueError:
+        return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid subscriptionStatus value provided. Must be one of {[status.value for status in SubscriptionStatus]}"}), 400
+    subscriptions = subscriptionRepo.getSubscriptionsByStatus(validSubscriptionStatus)
     if subscriptions is not None:
         subscriptionsDict = [subscription.toDict() for subscription in subscriptions]
         return jsonify(subscriptionsDict), 200
@@ -137,7 +138,7 @@ def setSubscriptionsStatus():
     except ValueError:
         return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid subscriptionStatus value provided. Must be one of {[status.value for status in SubscriptionStatus]}"}), 400
     
-    if subscriptionRepository.setSubsriptionStatus(dataSubscriptionID, validSubscriptionStatus):
+    if subscriptionRepo.setSubsriptionStatus(dataSubscriptionID, validSubscriptionStatus):
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.SUCCESS}subscriptionStatus updated successfully"}), 200
     else:
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}subscriptionStatus could not be updated"}), 500
@@ -161,10 +162,68 @@ def createSubscription():
     except ValueError:
         return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid subscriptionStatus value provided. Must be one of {[status.value for status in SubscriptionStatus]}"}), 400
     
-    if subscriptionRepository.createSubscription(dataUserID, dataAvailableApiID, dataInterval, validSubscriptionStatus):
+    if subscriptionRepo.createSubscription(dataUserID, dataAvailableApiID, dataInterval, validSubscriptionStatus):
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.SUCCESS}supscription created successfully"}), 200
     else:
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}subscription could not be created"}), 500
+
+
+# -------------------------- PostgreSQL AvailableApi Routes -------------------------------------------------------------------------------------------------------------------------------------------------
+@app.route('/availableApis', methods=['GET'])
+def availableApis():
+    availableApis = availableApiRepo.getAvailableApis()
+    if availableApis is not None:
+        availableApisDict = [availableApi.toDict() for availableApi in availableApis]
+        return jsonify(availableApisDict), 200
+    else:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}No availableApis found"}), 404
+    
+@app.route('/availableApi/<int:availableApiID>', methods=['GET'])
+def availableApi(availableApiID):
+    availableApi = availableApiRepo.getAvailableApiByID(availableApiID)
+    if availableApi is not None:
+        return jsonify(availableApi.toDict()), 200
+    else:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}No availableApiID with ID {availableApiID} found"}), 404
+
+@app.route('/availableApisBySubscriptionType/<string:subscriptionType>', methods=['GET'])
+def availableApisBySubscriptionType(subscriptionType):
+    try:
+        # Attempt to match the status with the Enum
+        validSubscriptionType = SubscriptionType(subscriptionType)
+    except ValueError:
+        return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid subscriptionType value provided. Must be one of {[type.value for type in SubscriptionType]}"}), 400
+    
+    availableApis =  availableApiRepo.getAvailableApiBySubscriptionType(validSubscriptionType)
+    if availableApis is not None:
+        availableApisDict = [availableApi.toDict() for availableApi in availableApis]
+        return jsonify(availableApisDict), 200
+    else:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}No availableApis with subscriptionType {subscriptionType} found"}), 404
+
+@app.route('/createAvailableApi', methods=['POST'])
+def createAvailableApi():
+    if not request.is_json:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing JSON in the request"}), 400
+
+    dataUrl = request.json.get('url', None)
+    dataDescription = request.json.get('description', None)
+    dataSubscriptionType = request.json.get('subscriptionType', None)
+
+    if not dataUrl or not dataDescription or not dataSubscriptionType:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing url, description or subscriptionType"}), 400
+    
+    try:
+        # Attempt to match the status with the Enum
+        validSubscriptionType = SubscriptionType(dataSubscriptionType)
+    except ValueError:
+        return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid subscriptionType value provided. Must be one of {[type.value for type in SubscriptionType]}"}), 400
+    
+    if availableApiRepo.createAvailableApi(dataUrl, dataDescription, validSubscriptionType):
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.SUCCESS}availableApi created successfully"}), 200
+    else:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}availableApi could not be created"}), 500
+    
 
    
 def initializePostgres():
