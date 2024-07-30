@@ -10,11 +10,19 @@ API Harvester allows periodic collection and visualization of data from pre-conf
 2. Add the following configuration variables:
 
     ```env
-    POSTGRES_PW=<password>                    # Set the password for your PostgreSQL database
     JWT_SECRET_KEY=<jwt key>                  # Set the secret key for the JWT token
     ENV=<prod | dev>                          # Environment mode: 'dev' for development, 'prod' for production
+
+    #PostgreSQL variables
+    POSTGRES_PASSWORD=<password>                    # Set the password for your PostgreSQL database
     USER_EMAIL= <e-mail>                      # Set the E-Mail for the first Application User (optional)
     USER_PASSWORD = <password>                # Set the Password for the first Application User (optional)
+
+    # InfluxDB variables
+    INFLUXDB_ADMIN_USER=<admin user name>
+    INFLUXDB_ADMIN_PASSWORD=<admin user password>
+    INFLUXDB_ORG=apiHarvester
+    INFLUXDB_TOKEN=<token>
     ```
 
 

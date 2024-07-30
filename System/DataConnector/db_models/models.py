@@ -15,7 +15,7 @@ class User(Base):
     role = Column(Enum(UserRole), nullable=False)
     lastLogin = Column(DateTime, nullable=True)
 
-    def to_dict(self):
+    def toDict(self):
         return {
             'userID': self.userID,
             'email': self.email,
@@ -34,7 +34,7 @@ class Subscription(Base):
     interval = Column(Integer, nullable=False)
     status = Column(Enum(SubscriptionStatus), nullable=False)
 
-    def to_dict(self):
+    def toDict(self):
         return {
             'subscriptionID': self.subscriptionID,
             'userID': self.userID,
@@ -51,7 +51,7 @@ class AvailableApi(Base):
     description = Column(String(200), nullable=False)
     subscriptionType = Column(Enum(SubscriptionType), nullable=False)
 
-    def to_dict(self):
+    def toDict(self):
         return {
             'availableApiID': self.availableApiID,
             'url': self.url,

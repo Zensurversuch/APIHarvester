@@ -36,7 +36,7 @@ class SubscriptionRepository:
     def getSubscriptionsByStatus(self, paramSubscriptionStatus):
         try:
             session = scoped_session(self.session_factory)
-            subscriptions = session.query(Subscription).filter(Subscription.status == paramSubscriptionStatus).first()
+            subscriptions = session.query(Subscription).filter(Subscription.status == paramSubscriptionStatus).all()
             return subscriptions
         except SQLAlchemyError as e:
             print(f"SubscriptionRepository: An error occurred while fetching subscriptions with status {paramSubscriptionStatus}: {e}")
@@ -70,6 +70,7 @@ class SubscriptionRepository:
                 print(f"SubscriptionRepository: No subscription found with ID {paramSubscriptionID}")
                 return False
             subscription.status = paramSubscriptionStatus
+            session.commit()
             return True
         except SQLAlchemyError as e:
             print(f"SubscriptionRepository: An error occurred while updating the subscriptionStatus for subscriptionID {paramSubscriptionID}: {e}")

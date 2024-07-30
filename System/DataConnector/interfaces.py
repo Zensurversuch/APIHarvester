@@ -19,7 +19,7 @@ class SubscriptionType(Enum):
 class ApiStatusMessages(Enum):
     SUCCESS = "SUCCESS: "
     WARNING = "WARNING: "
-    ERROR = "ERORR: "
+    ERROR = "ERROR: "
 
     def __str__(self):
         return self.value
@@ -27,7 +27,7 @@ class ApiStatusMessages(Enum):
 class SubscriptionStatus(Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
-    ERROR = "ERORR"
+    ERROR = "ERROR"
 
     def __str__(self):
         return self.name
