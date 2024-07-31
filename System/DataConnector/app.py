@@ -234,9 +234,10 @@ def createAvailableApi():
     dataUrl = request.json.get('url', None)
     dataDescription = request.json.get('description', None)
     dataSubscriptionType = request.json.get('subscriptionType', None)
+    dataRelevantFields = request.json.get('relevantFields', None)
 
-    if not dataUrl or not dataDescription or not dataSubscriptionType:
-        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing url, description or subscriptionType"}), 400
+    if not dataUrl or not dataDescription or not dataSubscriptionType or not dataRelevantFields:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing url, description, subscriptionType or relevantFields"}), 400
     
     try:
         # Attempt to match the status with the Enum
@@ -244,7 +245,7 @@ def createAvailableApi():
     except ValueError:
         return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid subscriptionType value provided. Must be one of {[type.value for type in SubscriptionType]}"}), 400
     
-    if availableApiRepo.createAvailableApi(dataUrl, dataDescription, validSubscriptionType):
+    if availableApiRepo.createAvailableApi(dataUrl, dataDescription, validSubscriptionType, dataRelevantFields):
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.SUCCESS}availableApi created successfully"}), 200
     else:
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}availableApi could not be created"}), 500
@@ -281,7 +282,8 @@ def initializePostgres():
             availableApi = AvailableApi( availableApiID =1,
                                     url = "Test",
                                     description = "Test",
-                                    subscriptionType = SubscriptionType.FREE)
+                                    subscriptionType = SubscriptionType.FREE,
+                                    relevantFields = ["Test", "Test2"])
             	
 
             subscription = Subscription( userID = 1,
