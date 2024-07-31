@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, Column, Integer, String, ForeignKey, Enum
+from sqlalchemy import ARRAY, DateTime, Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import declarative_base
 from interfaces import UserRole, SubscriptionType, SubscriptionStatus
 
@@ -50,13 +50,15 @@ class AvailableApi(Base):
     url = Column(String(200), nullable=False)
     description = Column(String(200), nullable=False)
     subscriptionType = Column(Enum(SubscriptionType), nullable=False)
+    relevantFields = Column(ARRAY(String), nullable=False)
 
     def toDict(self):
         return {
             'availableApiID': self.availableApiID,
             'url': self.url,
             'description': self.description,
-            'subscriptionType': self.subscriptionType.name
+            'subscriptionType': self.subscriptionType.name,
+            'relevantFields': self.relevantFields
         }
 
 

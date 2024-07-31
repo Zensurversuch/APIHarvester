@@ -44,12 +44,13 @@ class AvailableApiRepository:
         finally:
             session.close()
 
-    def createAvailableApi(self, paramUrl, paramDescription, paramSubscriptionType):
+    def createAvailableApi(self, paramUrl, paramDescription, paramSubscriptionType, paramRelevantFields):
         try:
             session = scoped_session(self.session_factory)
             newAvailableApi = AvailableApi( url = paramUrl,
                                             description = paramDescription, 
-                                            subscriptionType = paramSubscriptionType)	
+                                            subscriptionType = paramSubscriptionType,
+                                            relevantFields = paramRelevantFields)	
             session.add(newAvailableApi)
             session.commit()
             return True
