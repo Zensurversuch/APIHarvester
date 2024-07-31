@@ -50,7 +50,7 @@ class AvailableApi(Base):
     url = Column(String(200), nullable=False)
     description = Column(String(200), nullable=False)
     subscriptionType = Column(Enum(SubscriptionType), nullable=False)
-    relevantFields = Column(ARRAY(String), nullable=True)
+    relevantFields = Column(ARRAY(String), nullable=False)
 
     def toDict(self):
         return {
