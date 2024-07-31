@@ -22,7 +22,7 @@ class User(Base):
             'lastName': self.lastName,
             'firstName': self.firstName,
             'role': self.role.name,  
-            'lastLogin': self.lastLogin.isoformat() if self.lastLogin else None,
+            'lastLogin': self.lastLogin.isoformat() if self.lastLogin else None
         }
 
 class Subscription(Base):
@@ -40,7 +40,7 @@ class Subscription(Base):
             'userID': self.userID,
             'availableApiID': self.availableApiID,
             'interval': self.interval,
-            'status': self.status.name, 
+            'status': self.status.name 
         }
 
 class AvailableApi(Base):
@@ -56,7 +56,7 @@ class AvailableApi(Base):
             'availableApiID': self.availableApiID,
             'url': self.url,
             'description': self.description,
-            'subscriptionType': self.subscriptionType.name, 
+            'subscriptionType': self.subscriptionType.name
         }
 
 

@@ -44,6 +44,18 @@ class SubscriptionRepository:
         finally:
             session.close()
 
+    def getSubscriptionsByUserID(self, paramUserID):
+        try:
+            session = scoped_session(self.session_factory)
+            subscriptions = session.query(Subscription).filter(Subscription.userID == paramUserID).all()
+            return subscriptions
+        except SQLAlchemyError as e:
+            print(f"SubscriptionRepository: An error occurred while fetching subscriptions with userID {paramUserID}: {e}")
+            session.rollback()
+            return None
+        finally:
+            session.close()
+
     def createSubscription(self, paramUserID, paramavalableApiID, paramInterval, paramSubscriptionStatus):
         try:
             session = scoped_session(self.session_factory)
@@ -53,7 +65,7 @@ class SubscriptionRepository:
                                 status= paramSubscriptionStatus)	
             session.add(newSubscription)
             session.commit()
-            return True
+            return True, newSubscription.subscriptionID
         except SQLAlchemyError as e:
             print(f"SubscriptionRepository: An error occurred while creating the subscription: {e}")
             session.rollback()

@@ -75,15 +75,23 @@ def createUser():
     dataPassword = data.get('password')
     dataLastName = data.get('lastName')
     dataFirstName = data.get('firstName')
-    if not (dataEmail and dataPassword and dataLastName and dataFirstName):
+    dataRole = data.get('role')
+
+    if not (dataEmail and dataPassword and dataLastName and dataFirstName and dataRole):
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Fill in all required fields"}), 400
 
     if userRepo.getUserByEmail(dataEmail):
         return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}A user with the email {dataEmail} already exists"}), 500
 
-    ret_value = userRepo.createUser(dataEmail, dataPassword, dataLastName, dataFirstName, UserRole.USER)
+    try:
+        # Attempt to match the status with the Enum
+        validUserRole = UserRole(dataRole)
+    except ValueError:
+        return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid userRole value provided. Must be one of {[role.value for role in UserRole]}"}), 400
+    
+    retValue = userRepo.createUser(dataEmail, dataPassword, dataLastName, dataFirstName, validUserRole)
 
-    if ret_value == False:
+    if retValue == False:
         return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}User could not be created"}), 500
 
     return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.SUCCESS}User created successfully"}), 201
@@ -120,6 +128,16 @@ def subscriptionsByStatus(subscriptionStatus):
         return jsonify(subscriptionsDict), 200
     else:
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}No subscriptions with Status {subscriptionStatus} found"}), 404
+
+@app.route('/subscriptionsByUserID/<string:userID>', methods=['GET'])
+def subscriptionsByUserID(userID):
+    subscriptions = subscriptionRepo.getSubscriptionsByUserID(userID)   
+    if subscriptions is not None:
+        subscriptionsDict = [subscription.toDict() for subscription in subscriptions]
+        return jsonify(subscriptionsDict), 200
+    else:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}No subscriptions with userID {userID} found"}), 404
+
 
 @app.route('/setSubscriptionsStatus', methods=['POST'])
 def setSubscriptionsStatus():
@@ -162,8 +180,15 @@ def createSubscription():
     except ValueError:
         return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid subscriptionStatus value provided. Must be one of {[status.value for status in SubscriptionStatus]}"}), 400
     
-    if subscriptionRepo.createSubscription(dataUserID, dataAvailableApiID, dataInterval, validSubscriptionStatus):
-        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.SUCCESS}supscription created successfully"}), 200
+    success, subscriptionID = subscriptionRepo.createSubscription(
+        dataUserID,
+        dataAvailableApiID,
+        dataInterval,
+        validSubscriptionStatus.value
+    )
+
+    if success:
+        return jsonify(subscriptionID = subscriptionID), 200
     else:
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}subscription could not be created"}), 500
 
