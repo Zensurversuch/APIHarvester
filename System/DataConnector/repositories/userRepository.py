@@ -10,8 +10,8 @@ class UserRepository:
         self.session_factory = sessionmaker(bind=self.engine)
 
     def createUser(self, paramEmail, paramPassword, paramLastName, paramFirstName, paramRole):
-        session = scoped_session(self.session_factory)
         try:
+            session = scoped_session(self.session_factory)
             hashedPassword = hashlib.sha256(paramPassword.encode('utf-8')).hexdigest()
             newUser = User( email=paramEmail,
                             password=hashedPassword,

@@ -9,8 +9,8 @@ class UserRole(Enum):
         return self.name
 
 class SubscriptionType(Enum):
-    FREE = "Free"
-    PREMIUM = "Premium"
+    FREE = "FREE"
+    PREMIUM = "PREMIUM"
 
     def __str__(self):
         return self.name
@@ -23,4 +23,12 @@ class ApiStatusMessages(Enum):
 
     def __str__(self):
         return self.value
+
+class SubscriptionStatus(Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    ERROR = "ERROR"
+
+    def __str__(self):
+        return self.name
     
