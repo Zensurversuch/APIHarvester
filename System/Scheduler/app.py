@@ -2,10 +2,16 @@ from flask import Flask, request, jsonify
 import configparser
 import logging
 import docker
+from os import getenv
 
 app = Flask(__name__)
+ENV=getenv('ENV')
 
-logging.basicConfig(level=logging.INFO)
+if(ENV=='dev'):
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 dockerClient = docker.from_env()

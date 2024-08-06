@@ -26,22 +26,6 @@ services:
       INFLUXDB_ADMIN_USER: ${INFLUXDB_ADMIN_USER}
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
 
-  ofelia:
-    image: mcuadros/ofelia:latest
-    container_name: ofelia
-    # restart: always
-    command: daemon --config=/etc/ofelia/config.ini
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./Scheduler/.config:/etc/ofelia
-
-  testworker:
-    image: ubuntu:latest
-    container_name: testworker
-    command: ["sleep", "infinity"]
-    secrets:
-      - apikeys
-
   scheduler:
     build:
       context: ./Scheduler/
@@ -56,7 +40,27 @@ services:
     volumes:
       - ./Scheduler/.config:/app/opheliaConfig
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      ENV: ${ENV}
 
+  ofelia:
+    image: mcuadros/ofelia:latest
+    container_name: ofelia
+    # restart: always
+    command: daemon --config=/etc/ofelia/config.ini
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./Scheduler/.config:/etc/ofelia
+
+  worker:
+    build:
+      context: ./Worker
+    container_name: worker
+    command: ["sleep", "infinity"]
+    secrets:
+      - apikeys
+    environment:
+      ENV: ${ENV}
 
   database:
     image: postgres:15
@@ -70,6 +74,7 @@ services:
 
   influxdb:
     image: influxdb:2.7.7
+    container_name: influxdb
     ports:
       - '8086:8086'
     volumes:
