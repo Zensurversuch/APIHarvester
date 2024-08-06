@@ -24,7 +24,6 @@ class AvailableApiRepository:
             session = self.session_factory()
             availableApisIds = session.query(AvailableApi.availableApiID).all()
 
-            IdsArray = []
             IdsArray = [id[0] for id in availableApisIds]
             return IdsArray
         except SQLAlchemyError as e:
@@ -58,11 +57,12 @@ class AvailableApiRepository:
         finally:
             session.close()
 
-    def createAvailableApi(self, paramUrl, paramName, paramSubscriptionType, paramRelevantFields):
+    def createAvailableApi(self, paramUrl, paramName, paramDescription, paramSubscriptionType, paramRelevantFields):
         try:
             session = scoped_session(self.session_factory)
             newAvailableApi = AvailableApi( url = paramUrl,
                                             name = paramName, 
+                                            description = paramDescription,
                                             subscriptionType = paramSubscriptionType,
                                             relevantFields = paramRelevantFields)	
             session.add(newAvailableApi)

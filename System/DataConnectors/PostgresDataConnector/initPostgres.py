@@ -32,51 +32,56 @@ def initializePostgres():
 
     #add admin user during initial setup
     if session.query(User).count() == 0:
-        email = getenv('USER_EMAIL')
-        password = getenv('USER_PASSWORD')
-        if email and password:
-        # Create the admin user
-            user = User(
-                    userID = 1,
-                    email = email,
-                    password = hashlib.sha256(password.encode('utf-8')).hexdigest(),
-                    lastName = 'Last1',
-                    firstName = 'First1',
-                    role=UserRole.ADMIN
-                    )
+        try:
+            email = getenv('USER_EMAIL')
+            password = getenv('USER_PASSWORD')
+            if email and password:
+            # Create the admin user
+                user = User(
+                        userID = 1,
+                        email = email,
+                        password = hashlib.sha256(password.encode('utf-8')).hexdigest(),
+                        lastName = 'Last1',
+                        firstName = 'First1',
+                        role=UserRole.ADMIN
+                        )
 
-            availableApi1 = AvailableApi( availableApiID = 1,
-                                    url = "https://finnhub.io/api/v1/quote?symbol=AAPL",
-                                    name = "Finnhub Apple",
-                                    subscriptionType = SubscriptionType.FREE,
-                                    relevantFields = ["c", "d", "dp", "h", "l", "o", "pc", "t"])
+                availableApi1 = AvailableApi( availableApiID = 1,
+                                        url = "https://finnhub.io/api/v1/quote?symbol=AAPL",
+                                        name = "Finnhub Apple",
+                                        subscriptionType = SubscriptionType.FREE,
+                                        relevantFields = ["c", "d", "dp", "h", "l", "o", "pc", "t"])
 
-            availableApi2 = AvailableApi( availableApiID = 2,
-                                    url = "https://finnhub.io/api/v1/quote?symbol=IBM",
-                                    name = "Finnhub IBM",
-                                    subscriptionType = SubscriptionType.FREE,
-                                    relevantFields = ["c", "d", "dp", "h", "l", "o", "pc", "t"])
+                availableApi2 = AvailableApi( availableApiID = 2,
+                                        url = "https://finnhub.io/api/v1/quote?symbol=IBM",
+                                        name = "Finnhub IBM",
+                                        subscriptionType = SubscriptionType.FREE,
+                                        relevantFields = ["c", "d", "dp", "h", "l", "o", "pc", "t"])
 
-            availableApi3 = AvailableApi( availableApiID = 3,
-                                    url = "https://api.open-meteo.com/v1/forecast?latitude=48.6767637&longitude=10.152923&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,cloud_cover,wind_speed_10m",
-                                    name = "Weather Heidenheim",
-                                    subscriptionType = SubscriptionType.FREE,
-                                    relevantFields = ["temperature_2m", "relative_humidity_2m", "dew_point_2m", "apparent_temperature", "precipitation_probability", "precipitation", "rain", "cloud_cover", "wind_speed_10m"])
+                availableApi3 = AvailableApi( availableApiID = 3,
+                                        url = "https://api.open-meteo.com/v1/forecast?latitude=48.6767637&longitude=10.152923&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,cloud_cover,wind_speed_10m",
+                                        name = "Weather Heidenheim",
+                                        subscriptionType = SubscriptionType.FREE,
+                                        relevantFields = ["temperature_2m", "relative_humidity_2m", "dew_point_2m", "apparent_temperature", "precipitation_probability", "precipitation", "rain", "cloud_cover", "wind_speed_10m"])
 
 
-            session.add(user)
-            session.commit()
-            
-            session.add(availableApi1)
-            session.add(availableApi2)
-            session.add(availableApi3)
-            session.commit()
+                session.add(user)
+                session.commit()
 
-        else:
-            print("Environment variables USER_EMAIL or USER_PASSWORD are not set.")
+                session.add(availableApi1)
+                session.add(availableApi2)
+                session.add(availableApi3)
+                session.commit()
 
-    print("Database initialized.")
-    session.close()
+            else:
+                print("Environment variables USER_EMAIL or USER_PASSWORD are not set.")
+            print("Database initialized.")
+
+        except Exception as e:
+            session.rollback()
+            print(f"Error during initializing the postgreSQL database {e}")
+        finally:
+            session.close()
 
 
 if __name__ == '__main__':

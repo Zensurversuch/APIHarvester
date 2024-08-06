@@ -30,8 +30,8 @@ API Harvester allows periodic collection and visualization of data from pre-conf
 Create a file containing all the required API keys as a key-value file. It should be located under `System/apikeys.txt` and formatted as follows:
 
 ``` text
-WEATHER_KEY=<weather api key>
-STOCKS_KEY=<stock market api key>
+FINNHUB_KEY=<finnhub api key>
+ALPHA_VANTAGE_KEY=<alpha vantage api key>
 ```
 
 ## Current fetchable API's
