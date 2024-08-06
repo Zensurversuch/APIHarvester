@@ -148,9 +148,10 @@ def createSubscription():
     dataAvailableApiID = request.json.get('availableApiID', None)
     dataInterval = request.json.get('interval', None)
     dataStatus = request.json.get('status', None)
+    dataJobName = request.json.get('jobName', None)
 
-    if not dataUserID or not dataAvailableApiID or not dataInterval or not dataStatus:
-        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing userID, availableApiID, interval or status"}), 400
+    if not dataUserID or not dataAvailableApiID or not dataInterval or not dataStatus or not dataJobName:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing userID, availableApiID, interval, status or jobName"}), 400
     
     try:
         # Attempt to match the status with the Enum
@@ -162,7 +163,8 @@ def createSubscription():
         dataUserID,
         dataAvailableApiID,
         dataInterval,
-        validSubscriptionStatus.value
+        validSubscriptionStatus.value,
+        dataJobName
     )
 
     if success:
@@ -218,12 +220,12 @@ def createAvailableApi():
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing JSON in the request"}), 400
 
     dataUrl = request.json.get('url', None)
-    dataDescription = request.json.get('description', None)
+    dataName = request.json.get('name', None)
     dataSubscriptionType = request.json.get('subscriptionType', None)
     dataRelevantFields = request.json.get('relevantFields', None)
 
-    if not dataUrl or not dataDescription or not dataSubscriptionType or not dataRelevantFields:
-        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing url, description, subscriptionType or relevantFields"}), 400
+    if not dataUrl or not dataName or not dataSubscriptionType or not dataRelevantFields:
+        return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}Missing url, name, subscriptionType or relevantFields"}), 400
     
     try:
         # Attempt to match the status with the Enum
@@ -231,7 +233,7 @@ def createAvailableApi():
     except ValueError:
         return jsonify({apiMessageDescriptor: f"{ApiStatusMessages.ERROR}Invalid subscriptionType value provided. Must be one of {[type.value for type in SubscriptionType]}"}), 400
     
-    if availableApiRepo.createAvailableApi(dataUrl, dataDescription, validSubscriptionType, dataRelevantFields):
+    if availableApiRepo.createAvailableApi(dataUrl, dataName, validSubscriptionType, dataRelevantFields):
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.SUCCESS}availableApi created successfully"}), 200
     else:
         return jsonify({apiMessageDescriptor:  f"{ApiStatusMessages.ERROR}availableApi could not be created"}), 500

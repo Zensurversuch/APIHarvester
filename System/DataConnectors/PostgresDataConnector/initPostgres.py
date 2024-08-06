@@ -37,44 +37,41 @@ def initializePostgres():
         if email and password:
         # Create the admin user
             user = User(
-            email = email,
-            password = hashlib.sha256(password.encode('utf-8')).hexdigest(),
-            lastName = 'Last1',
-            firstName = 'First1',
-            role=UserRole.ADMIN
-            )
+                    userID = 1,
+                    email = email,
+                    password = hashlib.sha256(password.encode('utf-8')).hexdigest(),
+                    lastName = 'Last1',
+                    firstName = 'First1',
+                    role=UserRole.ADMIN
+                    )
 
-            availableApi = AvailableApi( availableApiID = 1,
-                                    url = "https://finnhub.io/api/v1/",
-                                    description = "Stocks and Exchange Rates",
+            availableApi1 = AvailableApi( availableApiID = 1,
+                                    url = "https://finnhub.io/api/v1/quote?symbol=AAPL",
+                                    name = "Finnhub Apple",
                                     subscriptionType = SubscriptionType.FREE,
                                     relevantFields = ["c", "d", "dp", "h", "l", "o", "pc", "t"])
 
             availableApi2 = AvailableApi( availableApiID = 2,
-                                    url = "test",
-                                    description = "Something",
+                                    url = "https://finnhub.io/api/v1/quote?symbol=IBM",
+                                    name = "Finnhub IBM",
                                     subscriptionType = SubscriptionType.FREE,
-                                    relevantFields = ["bla", "foo"])
+                                    relevantFields = ["c", "d", "dp", "h", "l", "o", "pc", "t"])
 
-            subscription = Subscription( userID = 1,
-                                         availableApiID = 1,
-                                         interval = 5, 
-                                         status = SubscriptionStatus.ACTIVE)
+            availableApi3 = AvailableApi( availableApiID = 3,
+                                    url = "https://api.open-meteo.com/v1/forecast?latitude=48.6767637&longitude=10.152923&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,cloud_cover,wind_speed_10m",
+                                    name = "Weather Heidenheim",
+                                    subscriptionType = SubscriptionType.FREE,
+                                    relevantFields = ["temperature_2m", "relative_humidity_2m", "dew_point_2m", "apparent_temperature", "precipitation_probability", "precipitation", "rain", "cloud_cover", "wind_speed_10m"])
 
-            
-            subscription2 = Subscription( userID = 1,
-                                         availableApiID = 1,
-                                         interval = 5, 
-                                         status = SubscriptionStatus.INACTIVE)  
-            
+
             session.add(user)
-            session.add(availableApi)
+            session.commit()
+            
+            session.add(availableApi1)
             session.add(availableApi2)
+            session.add(availableApi3)
             session.commit()
-            session.add(subscription)
-            session.add(subscription2)
-            session.commit()
-            print("Admin user created successfully.")
+
         else:
             print("Environment variables USER_EMAIL or USER_PASSWORD are not set.")
 

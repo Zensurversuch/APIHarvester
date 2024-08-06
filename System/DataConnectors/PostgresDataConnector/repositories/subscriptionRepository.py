@@ -56,13 +56,14 @@ class SubscriptionRepository:
         finally:
             session.close()
 
-    def createSubscription(self, paramUserID, paramavalableApiID, paramInterval, paramSubscriptionStatus):
+    def createSubscription(self, paramUserID, paramavalableApiID, paramInterval, paramSubscriptionStatus, paramJobName):
         try:
             session = scoped_session(self.session_factory)
             newSubscription = Subscription( userID=paramUserID,
                                 availableApiID=paramavalableApiID,
                                 interval=paramInterval, 
-                                status= paramSubscriptionStatus)	
+                                status=paramSubscriptionStatus,
+                                jobName=paramJobName)
             session.add(newSubscription)
             session.commit()
             return True, newSubscription.subscriptionID
@@ -81,6 +82,7 @@ class SubscriptionRepository:
                 print(f"SubscriptionRepository: No subscription found with ID {paramSubscriptionID}")
                 return False
             subscription.status = paramSubscriptionStatus
+            subscription.jobName = None
             session.commit()
             return True
         except SQLAlchemyError as e:

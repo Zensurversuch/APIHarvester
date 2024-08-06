@@ -2,6 +2,7 @@ import requests
 import logging
 from os import getenv
 import argparse
+from datetime import datetime, timezone
 
 ENV = getenv('ENV')
 
@@ -27,37 +28,44 @@ def loadApiTokens(file_path):
 
 apiTokens = loadApiTokens('/run/secrets/apikeys')
 
-#python fetchApis.py fetchFinnhub --symbol AAPL
-def fetchFinnhub(stockSymbol):
-    baseUrl = "https://finnhub.io/api/v1/"
 
-    params = {
-        'symbol': stockSymbol,
-        'token': apiTokens['FINNHUB_KEY']
-    }
+
+#python fetchApis.py fetchApi --url <url>
+def fetchApiWithToken(url):
     try:
-        response = requests.get(f"{baseUrl}/quote", params=params)
+        response = requests.get(f"{url}&token={apiTokens['FINNHUB_KEY']}")
         response.raise_for_status()
         data = response.json()
-        logger.info(f"Received data for {stockSymbol}: {data}")
+        logger.info(f"Received data for {url}: {data}")
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching data for {stockSymbol}: {e}")
+        logger.error(f"Error fetching data for {url}: {e}")
 
-def fetchXY():
-    logger.info("FETCHING XY")
+
+def fetchApiWithoutToken(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        logger.info(f"Received data for {url}: {data}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching data for {url}: {e}")
+
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run specific functions from the script.')
-    parser.add_argument('function', choices=['fetchFinnhub', 'fetchXY'], help='Function to run')
-    parser.add_argument('--stockSymbol', help='Stock symbol for fetchFinnhub')
+    parser.add_argument('function', choices=['fetchApiWithToken', 'fetchApiWithoutToken'], help='Function to run')
+    parser.add_argument('--url', help='the Url to fetch')
 
     args = parser.parse_args()
 
-    if args.function == 'fetchFinnhub':
-        if args.stockSymbol:
-            fetchFinnhub(args.stockSymbol)
+    if args.function == 'fetchApiWithToken':
+        if args.url:
+            fetchApiWithToken(args.url)
         else:
-            logger.error("For 'fetchFinnhub', --stockSymbol argument is required.")
-    elif args.function == 'fetchXY':
-        fetchXY()
+            logger.error("--url argument is required.")
+    elif args.function == 'fetchApiWithoutToken':
+        if args.url:
+            fetchApiWithoutToken(args.url)
+        else:
+            logger.error("--url argument is required.")
