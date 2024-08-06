@@ -1,0 +1,13 @@
+FROM python:3.8
+
+WORKDIR /app
+COPY ./InfluxDataConnector .
+
+COPY ./InfluxDataConnector/requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+RUN pip install gunicorn
+
+EXPOSE 5000
+
+ENTRYPOINT ["/app/entrypointProd.sh"]

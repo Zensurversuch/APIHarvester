@@ -1,6 +1,6 @@
 from functools import wraps
 from flask_jwt_extended import get_jwt_identity
-from role_permissions import getPermissionsForRole
+from System.DataConnectors.rolePermissions import getPermissionsForRole
 from flask import jsonify
 from interfaces import ApiStatusMessages
 

@@ -14,7 +14,6 @@ class SubscriptionType(Enum):
 
     def __str__(self):
         return self.name
-    
 
 class ApiStatusMessages(Enum):
     SUCCESS = "SUCCESS: "
@@ -31,4 +30,3 @@ class SubscriptionStatus(Enum):
 
     def __str__(self):
         return self.name
-    

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from db_models.models import Subscription
+from dbModels.models import Subscription
 
 class SubscriptionRepository:
     def __init__(self, engine):
