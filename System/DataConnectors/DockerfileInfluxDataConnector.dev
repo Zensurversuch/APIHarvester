@@ -7,4 +7,4 @@ RUN pip install -r requirements.txt
 
 COPY ./InfluxDataConnector .
 
-ENTRYPOINT ["/app/entrypointDev.sh"]
+CMD python /app/initInflux.py; python /app/app.py

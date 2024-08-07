@@ -5,7 +5,7 @@ WORKDIR /app
 COPY ./PostgresDataConnector/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY ./PostgresDataConnector .
+COPY ./PostgresDataConnector/ /app/
 COPY ./decorators.py ./interfaces.py ./rolePermissions.py ./
 
-ENTRYPOINT ["/app/entrypointDev.sh"]
+CMD python /app/initPostgres.py; python /app/app.py
