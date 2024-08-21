@@ -2,13 +2,12 @@ from datetime import timedelta, datetime, timezone
 import hashlib
 import time
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, jwt_required
-from sqlalchemy import create_engine
+from flask_jwt_extended import JWTManager, create_access_token
 from flask_cors import CORS
 from os import getenv
 from commonRessources.interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
 from commonRessources.constants import API_MESSAGE_DESCRIPTOR
-from initPostgres import initializePostgres, userRepo, subscriptionRepo, availableApiRepo
+from initPostgres import userRepo, subscriptionRepo, availableApiRepo
 
 app = Flask(__name__)
 

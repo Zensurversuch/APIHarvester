@@ -1,10 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 import configparser
 import logging
 import docker
 import requests
 from os import getenv
-from commonRessources.interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
+from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources.constants import API_MESSAGE_DESCRIPTOR
 
 app = Flask(__name__)
@@ -111,11 +111,13 @@ def unsubscribeApi(subscriptionId):
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job deleted"}), 200
         else:
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api isn't unsubscribed and job couldn't be deleted"}), 400
-        # Here the counter still has to be decremented, but this is done during autocalling
+        # Here the counter has to be decremented in the future, but this is done during autocalling
         # The problem is that if I just decrement the counter a job which still runs could be overwritten if
-        # for instance 5 jobs are running and i delete job1
+        # for instance 5 jobs (job0, job1, job2, job3, job4) are running and i delete job1 then job number 5
+        # would be overwritten because the counter would be decremented to 4 and the new job would be named 
+        # job4 (which is already in use)
     except requests.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}: str(e)"}), 500
 
 def deleteJob(jobName):
     config = configparser.ConfigParser()

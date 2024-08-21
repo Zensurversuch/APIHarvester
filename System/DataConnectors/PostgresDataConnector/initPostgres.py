@@ -1,11 +1,11 @@
 from repositories import userRepository, subscriptionRepository, availableApiRepository
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from commonRessources.interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
+from commonRessources.interfaces import UserRole, SubscriptionType
 import time
 import hashlib
 from os import getenv
-from dbModels.models import Base, User, Subscription, AvailableApi
+from dbModels.models import Base, User, AvailableApi
 import sqlalchemy.exc
 
 POSTGRES_URL = f"postgresql://{getenv('POSTGRES_USER')}:{getenv('POSTGRES_PASSWORD')}@database/{getenv('POSTGRES_DB')}"

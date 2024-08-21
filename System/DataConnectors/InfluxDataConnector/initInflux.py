@@ -1,7 +1,6 @@
 from os import getenv
-from influxdb_client import InfluxDBClient, Point, BucketRetentionRules
+from influxdb_client import InfluxDBClient, BucketRetentionRules
 from influxdb_client.client.write_api import SYNCHRONOUS
-from influxdb_client.client import bucket_api
 import time
 import requests
 

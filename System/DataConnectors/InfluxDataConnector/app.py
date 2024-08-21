@@ -1,8 +1,10 @@
 from datetime import timedelta, datetime, timezone
 from flask import Flask, jsonify, request
 from os import getenv
-from influxdb_client import InfluxDBClient, Point
+from influxdb_client import Point
 from initInflux import influxWriteApi, influxQueryApi, influxbucketApi,influxdbOrg
+from commonRessources.interfaces import ApiStatusMessages
+from commonRessources.constants import API_MESSAGE_DESCRIPTOR
 
 app = Flask(__name__)
 
@@ -22,9 +24,12 @@ def influxWriteData(apiId):
         .time(now)
 
     bucketName = f"{apiId}_bucket"
-    influxWriteApi.write(bucket=bucketName, org=influxdbOrg, record=point)
 
-    return jsonify({"message": f"Data written to InfluxDB bucket {bucketName}"}), 200
+    try:
+        influxWriteApi.write(bucket=bucketName, org=influxdbOrg, record=point)
+        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Data written to InfluxDB bucket {bucketName}"}), 200
+    except Exception as e:
+        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Failed to write data to InfluxDB bucket {bucketName}"}), 500
 
 @app.route('/influxGetData/<apiId>/<userId>', methods=['GET'])
 # @jwt_required()
@@ -45,7 +50,7 @@ def influxGetData(apiId, userId):
         tables = influxQueryApi.query(org=influxdbOrg, query=query)
         result = [record.values for table in tables for record in table.records]
     except Exception as e:
-        return jsonify({"message": f"Error querying InfluxDB: {e}"}), 500
+        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Error querying InfluxDB: {e}"}), 500
 
     return jsonify(result), 200
 
@@ -57,7 +62,7 @@ def getBuckets():
         bucketList = [bucket.name for bucket in buckets]
         return jsonify(bucketList), 200
     except Exception as e:
-        return jsonify({"message": f"Error fetching buckets from InfluxDB: {e}"}), 500
+        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Error fetching buckets from InfluxDB: {e}"}), 500
 
 
 if __name__ == '__main__':
