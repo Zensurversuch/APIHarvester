@@ -4,9 +4,9 @@ import logging
 import docker
 import requests
 from os import getenv
-from interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
+from commonRessources.interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
+from commonRessources.constants import API_MESSAGE_DESCRIPTOR
 
-API_MESSAGE_DESCRIPTOR = "response"
 app = Flask(__name__)
 ENV=getenv('ENV')
 

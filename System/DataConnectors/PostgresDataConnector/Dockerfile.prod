@@ -2,11 +2,12 @@ FROM python:3.8
 
 WORKDIR /app
 
-COPY ./PostgresDataConnector .
-COPY ./decorators.py ./interfaces.py ./rolePermissions.py ./
-
-COPY ./PostgresDataConnector/requirements.txt requirements.txt
+COPY ./DataConnectors/PostgresDataConnector/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+
+COPY ./commonRessources ./commonRessources
+COPY ./DataConnectors/PostgresDataConnector/ /app/
+
 
 RUN pip install gunicorn
 

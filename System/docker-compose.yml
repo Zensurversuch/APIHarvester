@@ -8,8 +8,8 @@ services:
 
   postgresdataconnector:
     build:
-      context: ./DataConnectors
-      dockerfile: DockerfilePostgresDataConnector.${ENV}
+      context: ./
+      dockerfile: DataConnectors/PostgresDataConnector/Dockerfile.${ENV}
     container_name: postgresdataconnector
     # restart: always
     ports:
@@ -25,8 +25,8 @@ services:
 
   influxdataconnector:
     build:
-      context: ./DataConnectors
-      dockerfile: DockerfileInfluxDataConnector.${ENV}
+      context: ./
+      dockerfile: DataConnectors/InfluxDataConnector/Dockerfile.${ENV}
     container_name: influxdataconnector
     # restart: always
     ports:
@@ -42,8 +42,8 @@ services:
 
   scheduler:
     build:
-      context: ./Scheduler/
-      dockerfile: Dockerfile.${ENV}
+      context: ./
+      dockerfile: Scheduler/Dockerfile.${ENV}
     container_name: scheduler
     restart: always
     ports:

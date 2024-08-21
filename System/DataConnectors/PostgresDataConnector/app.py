@@ -6,7 +6,8 @@ from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity
 from sqlalchemy import create_engine
 from flask_cors import CORS
 from os import getenv
-from interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
+from commonRessources.interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
+from commonRessources.constants import API_MESSAGE_DESCRIPTOR
 from initPostgres import initializePostgres, userRepo, subscriptionRepo, availableApiRepo
 
 app = Flask(__name__)
@@ -14,7 +15,6 @@ app = Flask(__name__)
 # -------------------------- Environment Variables ------------------------------------------------------------------------------------------------------------------------------------------
 POSTGRES_URL = f"postgresql://{getenv('POSTGRES_USER')}:{getenv('POSTGRES_PASSWORD')}@database/{getenv('POSTGRES_DB')}"
 app.config["JWT_SECRET_KEY"] = f"{getenv('JWT_SECRET_KEY')}"
-API_MESSAGE_DESCRIPTOR = "response"
 
 
 # --------------------------- Initializations -----------------------------------------------------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 from sqlalchemy import ARRAY, DateTime, Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import declarative_base
-from interfaces import UserRole, SubscriptionType, SubscriptionStatus
+from commonRessources.interfaces import UserRole, SubscriptionType, SubscriptionStatus
 
 Base = declarative_base()
 

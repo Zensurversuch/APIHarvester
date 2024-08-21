@@ -1,7 +1,7 @@
 from repositories import userRepository, subscriptionRepository, availableApiRepository
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
+from commonRessources.interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
 import time
 import hashlib
 from os import getenv
