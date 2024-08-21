@@ -2,9 +2,10 @@ FROM python:3.8
 
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
+COPY ./Scheduler/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY . .
+COPY ./commonRessources ./commonRessources
+COPY ./Scheduler .
 
 CMD ["python", "app.py"]

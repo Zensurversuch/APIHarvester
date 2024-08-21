@@ -1,8 +1,9 @@
 from functools import wraps
 from flask_jwt_extended import get_jwt_identity
-from role_permissions import getPermissionsForRole
+from rolePermissions import getPermissionsForRole
 from flask import jsonify
 from interfaces import ApiStatusMessages
+from constants import API_MESSAGE_DESCRIPTOR
 
 def permission_check(userRepo):
     def decorator(func):
@@ -15,14 +16,14 @@ def permission_check(userRepo):
             if(user):
                 currentRole = user.role
             else:
-                return jsonify({"AuthenticationError": "User does not exist"}), 401
+                return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}User does not exist"}), 401
 
             currentPermissions = set(getPermissionsForRole(currentRole))
 
             if function_name in currentPermissions:
                 return func(*args, **kwargs)
             else:
-                return jsonify({"AuthenticationError":f"Access not permitted! {function_name} permission required"}), 403
+                return jsonify({API_MESSAGE_DESCRIPTOR:f"{ApiStatusMessages.ERROR}Access not permitted! {function_name} permission required"}), 403
 
         return wrapper
     return decorator

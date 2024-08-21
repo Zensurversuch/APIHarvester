@@ -1,6 +1,6 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from db_models.models import Subscription
+from dbModels.models import Subscription
 
 class SubscriptionRepository:
     def __init__(self, engine):
@@ -56,13 +56,14 @@ class SubscriptionRepository:
         finally:
             session.close()
 
-    def createSubscription(self, paramUserID, paramavalableApiID, paramInterval, paramSubscriptionStatus):
+    def createSubscription(self, paramUserID, paramavalableApiID, paramInterval, paramSubscriptionStatus, paramJobName):
         try:
             session = scoped_session(self.session_factory)
             newSubscription = Subscription( userID=paramUserID,
                                 availableApiID=paramavalableApiID,
                                 interval=paramInterval, 
-                                status= paramSubscriptionStatus)	
+                                status=paramSubscriptionStatus,
+                                jobName=paramJobName)
             session.add(newSubscription)
             session.commit()
             return True, newSubscription.subscriptionID
@@ -73,7 +74,7 @@ class SubscriptionRepository:
         finally:
             session.close()
 
-    def setSubsriptionStatus(self, paramSubscriptionID, paramSubscriptionStatus):
+    def setSubsriptionStatus(self, paramSubscriptionID, paramSubscriptionStatus, paramJobName):
         try:
             session = scoped_session(self.session_factory)
             subscription = session.query(Subscription).filter(Subscription.subscriptionID == paramSubscriptionID).first()
@@ -81,6 +82,7 @@ class SubscriptionRepository:
                 print(f"SubscriptionRepository: No subscription found with ID {paramSubscriptionID}")
                 return False
             subscription.status = paramSubscriptionStatus
+            subscription.jobName = paramJobName
             session.commit()
             return True
         except SQLAlchemyError as e:

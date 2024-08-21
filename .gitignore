@@ -1,5 +1,6 @@
-<<<<<<< HEAD
-=======
+# API Keys file
+System/apikeys.txt
+
 # Backend Flask
 
 # Byte-compiled / optimized / DLL files
@@ -108,4 +109,3 @@ dist
 stats.html
 
 .eslintcache
->>>>>>> origin/main

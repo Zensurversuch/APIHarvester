@@ -5,14 +5,14 @@ def getPermissionsForRole(role):
     if not isinstance(role, UserRole):
         print(f"Invalid role: {role}. Please use a valid UserRole instance.")
         return []
-    for line in permissions_data.split('\n'):
+    for line in permissionsData.split('\n'):
         parts = line.strip().split(':')
         if parts[0] == str(role):
             return parts[1].split(',')
     return []
 
 
-permissions_data = """
+permissionsData = """
 ADMIN:hello
 USER:hello
 PREMIUM_USER:
