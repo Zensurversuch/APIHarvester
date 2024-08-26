@@ -87,6 +87,8 @@ services:
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgresData:/var/lib/postgresql/data
 
   influxdb:
     image: influxdb:2.7.7
@@ -94,8 +96,8 @@ services:
     ports:
       - '8086:8086'
     volumes:
-      - influxdb-storage:/var/lib/influxdb
-      - influxdb-config:/etc/influxdb2
+      - influxdbStorage:/var/lib/influxdb2
+      - influxdbConfig:/etc/influxdb2
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_ADMIN_USER}
@@ -105,8 +107,13 @@ services:
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
 
 volumes:
-  influxdb-storage:
-  influxdb-config:
+  influxdbStorage:
+    name: "APIHarvesterInfluxDBStorageVolume"
+  influxdbConfig:
+    name: "APIHarvesterInfluxDBConfigVolume"
+  postgresData:
+    name: "APIHarversterPostgresDataVolume"
+  
 
 secrets:
   apikeys:
