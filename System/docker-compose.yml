@@ -4,7 +4,7 @@ services:
       context: ./Frontend/
     restart: always
     ports:
-      - "80:80"
+      - "8080:80"
 
   dataconnector:
     build:
