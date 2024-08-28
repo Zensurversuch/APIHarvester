@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 
@@ -11,30 +10,33 @@ import { AuthProvider } from './contexts/AuthContext';
 import APIList from './components/apis/APIList';
 import ProtectedRoute from './components/route/ProtectedRoute';
 import Register from './components/login/Register';
+import { APIProvider } from './contexts/ApiDataContext';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="App">
-          <Header />
-          <div className="content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/apis" 
-                element={
-                  <ProtectedRoute>
-                    <APIList apiData={[]} />
-                  </ProtectedRoute>
-                }
-              /> 
-            </Routes>
+      <APIProvider>
+          <div className="App">
+            <Header />
+            <div className="content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/apis" 
+                  element={
+                    <ProtectedRoute>
+                      <APIList />
+                    </ProtectedRoute>
+                  }
+                /> 
+              </Routes>
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
+        </APIProvider>
       </AuthProvider>
     </Router>
   );

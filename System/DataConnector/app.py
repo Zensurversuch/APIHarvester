@@ -279,11 +279,30 @@ def initializePostgres():
             role=UserRole.ADMIN
             )
 
-            availableApi = AvailableApi( availableApiID =1,
-                                    url = "Test",
-                                    description = "Test",
-                                    subscriptionType = SubscriptionType.FREE,
-                                    relevantFields = ["Test", "Test2"])
+            availableApis = [
+                                AvailableApi(
+                                    availableApiID=1,
+                                    url="Test2",
+                                    description="Test",
+                                    subscriptionType=SubscriptionType.FREE,
+                                    relevantFields=["Test", "Test2"]
+                                ),
+                                AvailableApi(
+                                    availableApiID=2,
+                                    url="Test14",
+                                    description="Test",
+                                    subscriptionType=SubscriptionType.FREE,
+                                    relevantFields=["Test", "Test2"]
+                                ),
+                                AvailableApi(
+                                    availableApiID=3,
+                                    url="Test3",
+                                    description="Test",
+                                    subscriptionType=SubscriptionType.FREE,
+                                    relevantFields=["Test", "Test2"]
+                                )
+                            ]
+                
             	
 
             subscription = Subscription( userID = 1,
@@ -298,7 +317,7 @@ def initializePostgres():
                                          status = SubscriptionStatus.INACTIVE)  
             
             session.add(user)
-            session.add(availableApi)
+            session.add_all(availableApis)
             session.commit()
             session.add(subscription)
             session.add(subscription2)

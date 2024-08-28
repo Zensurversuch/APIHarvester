@@ -1,13 +1,15 @@
+//import { useAuth } from '../../contexts/AuthContext';
 import { API_BASE_URL } from '../apiConfig'
+ 
 
-export const login = async (data: { email: string; password: string }) => {
-
-    const response = await fetch(API_BASE_URL + 'login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+export const availableApis = async () => {
+    //const { token } = useAuth();
+    const response = await fetch(API_BASE_URL + 'availableApis', {
+      method: 'GET',
+    //  headers: {
+     //   'Authorization': `Bearer ${token}`,  
+     //   'Content-Type': 'application/json',
+     // },
     });
   
     if (!response.ok) {

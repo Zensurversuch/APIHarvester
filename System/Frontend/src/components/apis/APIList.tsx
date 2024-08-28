@@ -1,76 +1,49 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Container, Row, Col, Table, Button, Collapse } from 'react-bootstrap';
+import React from 'react';
+import { Card, Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import { useAPI } from '../../contexts/ApiDataContext';
 
-// Define the API data structure
-interface API {
-  name: string;
-  description: string;
-  endpoint: string;
-  additionalInfo?: string; // Optional field for more details
-}
+const APIList: React.FC = () => {
+  const { apiData, loading, error } = useAPI();
 
-interface APIListProps {
-  apiData: API[];
-}
+  if (loading) {
+    return (
+      <Container className="text-center mt-5">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
 
-const APIList: React.FC<APIListProps> = ({ apiData }) => {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState<string | null>(null);
-
-  const handleToggle = (name: string) => {
-    setOpen(open === name ? null : name);
-  };
+  if (error) {
+    return (
+      <Container className="text-center mt-5">
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container className="mt-5">
       <Row>
-        <Col>
-          <h1>{t('apiListTitle')}</h1>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>{t('apiName')}</th>
-                <th>{t('apiDescription')}</th>
-                <th>{t('apiEndpoint')}</th>
-                <th>{t('details')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {apiData.map((api) => (
-                <React.Fragment key={api.name}>
-                  <tr>
-                    <td>{api.name}</td>
-                    <td>{api.description}</td>
-                    <td>{api.endpoint}</td>
-                    <td>
-                      <Button
-                        variant="info"
-                        onClick={() => handleToggle(api.name)}
-                      >
-                        {open === api.name ? t('hideDetails') : t('showDetails')}
-                      </Button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={4}>
-                      <Collapse in={open === api.name}>
-                        <div>
-                          {api.additionalInfo && (
-                            <>
-                              <p><strong>{t('apiDetails')}</strong></p>
-                              <p>{api.additionalInfo}</p>
-                            </>
-                          )}
-                        </div>
-                      </Collapse>
-                    </td>
-                  </tr>
-                </React.Fragment>
-              ))}
-            </tbody>
-          </Table>
-        </Col>
+        {apiData.map(api => (
+          <Col key={api.availableApiID} md={6} lg={4}>
+            <Card className="mb-4">
+              <Card.Body>
+                <Card.Title>{api.description}</Card.Title>
+                <Card.Text>
+                  <strong>Subscription Type:</strong> {api.subscriptionType}
+                </Card.Text>
+                <Card.Text>
+                  <strong>Relevant Fields:</strong> {api.relevantFields.join(', ')}
+                </Card.Text>
+                <Card.Text>
+                  <strong>URL: </strong>{api.url}
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
       </Row>
     </Container>
   );
