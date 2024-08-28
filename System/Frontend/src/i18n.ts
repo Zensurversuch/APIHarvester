@@ -17,6 +17,7 @@ const resources = {
         learnMore: "Learn More",
         navHome: "Home",
         navLogin: "Login",
+        navLogout: "Logout",
         apiListTitle: "API List",
         apiName: "API Name",
         apiDescription: "Description",

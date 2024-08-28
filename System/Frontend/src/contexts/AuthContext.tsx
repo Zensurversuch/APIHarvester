@@ -7,6 +7,7 @@ interface AuthContextType {
   userID: string;
   setAuthData: (token: string, role: string, userID: string) => void;
   clearAuth: () => void;
+  isLoggedIn: () => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,8 +30,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     clearAuthData(); // Clear from localStorage
   };
 
+  const isLoggedIn = () => {
+    return Boolean(auth.token);
+  };
+
   return (
-    <AuthContext.Provider value={{ ...auth, setAuthData, clearAuth }}>
+    <AuthContext.Provider value={{ ...auth, setAuthData, clearAuth, isLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );
