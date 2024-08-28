@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { register } from './services/authentication/registerService';
 
 const resources = {
   en: {
@@ -14,6 +15,26 @@ const resources = {
         loginPassword: "Password",
         loginPlaceholderEmail: "Enter email",
         loginPlaceholderPassword: "Enter password",
+        noAccount: "Don't have an account?",
+        registerHere: "Register here",
+        register: "Register",
+        registerDescription: "Please fill in the details below to create a new account.",
+        registerFirstName: "First Name",
+        registerPlaceholderFirstName: "Enter First Name",
+        registerLastName: "Last Name",
+        registerPlaceholderLastName: "Enter Last Name",
+        registerEmail: "Email",
+        registerPlaceholderEmail: "Enter email",
+        registerPassword: "Password",
+        registerPlaceholderPassword: "Enter password",
+        registerConfirmPassword: "Confirm Password",
+        registerPlaceholderConfirmPassword: "Confirm your password",
+        registerPasswordMismatch: "Passwords don´t match",
+        registerPasswordHelpText: "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character (e.g., !@#$%^&*).",
+        registerError: "Registration failed. Please try again.",
+        loginRedirectText: "Already have an account?",
+        loginRedirectLink: "Login here",
+        userCreatedSuccess: "User created successfully. You can now log in.",
         learnMore: "Learn More",
         navHome: "Home",
         navLogin: "Login",
@@ -27,6 +48,7 @@ const resources = {
         hideDetails: "Hide Details",
         apiDetails: "API Details",
         apiDetailsDescription: "Details for API {{apiName}}"
+
     },
   },
 };

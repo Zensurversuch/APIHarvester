@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { login } from '../../services/authentication/loginService';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   const { setAuthData } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    if (location.state && location.state.message) {
+      setMessage(location.state.message);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,6 +46,7 @@ const Login: React.FC = () => {
           <h1>{t('loginTitle')}</h1>
           <p className="lead mt-3">{t('loginDescription')}</p>
 
+          {message && <div className="alert alert-success">{message}</div>}
           {error && <div className="alert alert-danger">{error}</div>}
 
           <Form onSubmit={handleSubmit}>
@@ -64,6 +75,12 @@ const Login: React.FC = () => {
               {t('login')}
             </Button>
           </Form>
+
+          <div className="mt-3">
+            <small>
+              {t('noAccount')} <Link to="/register">{t('registerHere')}</Link>
+            </small>
+          </div>
         </Col>
       </Row>
     </Container>
