@@ -1,35 +1,54 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
+
+import './index.css';
+import Footer from './components/footer/Footer';
+import Header from './components/header/Header';
+import Home from './components/home/Home';
+import Login from './components/login/Login';
+import { AuthProvider } from './contexts/AuthContext';
+import APIList from './components/apis/APIList';
+import ProtectedRoute from './components/route/ProtectedRoute';
+import Register from './components/login/Register';
+import { APIProvider } from './contexts/ApiDataContext';
+import SubscriptionTable from './components/subscription/SubscriptionTable';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <AuthProvider>
+        <APIProvider>
+            <div className="App">
+              <Header />
+              <div className="content">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/apis" 
+                    element={
+                      <ProtectedRoute>
+                        <APIList />
+                      </ProtectedRoute>
+                    }
+                  /> 
+                  <Route
+                    path="/subscriptions" 
+                    element={
+                      <ProtectedRoute>
+                        <SubscriptionTable />
+                      </ProtectedRoute>
+                    }
+                  /> 
+                </Routes>
+              </div>
+              <Footer />
+            </div>
+        </APIProvider>
+      </AuthProvider>
+    </Router>
+  );
 }
 
-export default App
+export default App;
