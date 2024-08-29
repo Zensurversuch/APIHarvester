@@ -46,7 +46,8 @@ const resources = {
         showDetails: "Show Details",
         hideDetails: "Hide Details",
         apiDetails: "API Details",
-        apiDetailsDescription: "Details for API {{apiName}}"
+        apiDetailsDescription: "Details for API {{apiName}}",
+        subscriptionsTitle: "Subscriptions"
 
     },
   },

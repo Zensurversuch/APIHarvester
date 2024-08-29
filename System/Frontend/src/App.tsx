@@ -6,36 +6,45 @@ import Footer from './components/footer/Footer';
 import Header from './components/header/Header';
 import Home from './components/home/Home';
 import Login from './components/login/Login';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import APIList from './components/apis/APIList';
 import ProtectedRoute from './components/route/ProtectedRoute';
 import Register from './components/login/Register';
 import { APIProvider } from './contexts/ApiDataContext';
+import SubscriptionTable from './components/subscription/SubscriptionTable';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-      <APIProvider>
-          <div className="App">
-            <Header />
-            <div className="content">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route
-                  path="/apis" 
-                  element={
-                    <ProtectedRoute>
-                      <APIList />
-                    </ProtectedRoute>
-                  }
-                /> 
-              </Routes>
+        <APIProvider>
+            <div className="App">
+              <Header />
+              <div className="content">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/apis" 
+                    element={
+                      <ProtectedRoute>
+                        <APIList />
+                      </ProtectedRoute>
+                    }
+                  /> 
+                  <Route
+                    path="/subscriptions" 
+                    element={
+                      <ProtectedRoute>
+                        <SubscriptionTable />
+                      </ProtectedRoute>
+                    }
+                  /> 
+                </Routes>
+              </div>
+              <Footer />
             </div>
-            <Footer />
-          </div>
         </APIProvider>
       </AuthProvider>
     </Router>

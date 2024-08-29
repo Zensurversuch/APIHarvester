@@ -20,6 +20,7 @@ const Header: React.FC = () => {
           <Nav>
             <Nav.Link href="/">{t('navHome')}</Nav.Link>
             <Nav.Link href="/apis">{t('apiListTitle')}</Nav.Link>
+            <Nav.Link href="/subscriptions">{t('subscriptionsTitle')}</Nav.Link>
           </Nav>
           <Nav>
             {isLoggedIn() ? (

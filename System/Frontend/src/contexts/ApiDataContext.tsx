@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { availableApis } from '../services/availableApis/availalbeApisService';
 
 
-interface ApiData {
+export interface ApiData {
   availableApiID: number;
   description: string;
   relevantFields: string[];
