@@ -60,13 +60,12 @@ def subscribeApi():
             'availableApiID': apiID,
             'interval': interval,
             'status': SubscriptionStatus.ACTIVE.value,
-            'jobName': None
         })
         subscriptionResponse.raise_for_status()
 
-        subscriptionID = subscriptionResponse.json().get('subscriptionID')
 
         # Create job entry string for ofelia config file
+        subscriptionID = subscriptionResponse.json().get('subscriptionID')
         if apiName.startswith("Finnhub"):
             command = f"python /app/fetchScripts/fetchApis.py fetchApiWithToken --url {apiUrl} --subscriptionID {subscriptionID} --apiID {apiID}"
         elif apiName.startswith("Weather"):
@@ -76,20 +75,44 @@ def subscribeApi():
 
         jobName = f"job{ACTIVE_WORKER_COUNTER}"
 
+        #set the jobName, command and container in the subscription
+        subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
+            'subscriptionID': subscriptionID,
+            'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
+            'jobName': jobName,
+            'command': command,
+            'container': 'worker'
+        })
+
+        subscriptionResponse.raise_for_status()
         addJob(jobName, interval, command, "worker")
         ACTIVE_WORKER_COUNTER += 1
 
-        #set the jobName in the subscription
-        subscription_response = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
-            'subscriptionID': subscriptionID,
-            'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
-            'jobName': jobName
-        })
-
-        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription created"}), 200
+        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API {apiName}; API_ID: {apiID} created"}), 200
 
     except requests.RequestException as e:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}{str(e)}"}), 500
+
+@app.route('/resubscribeApi/<int:subscriptionID>', methods=['GET'])
+def resubscribeApi(subscriptionID):
+    try:
+        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}')
+        response.raise_for_status()
+        data = response.json()
+        if data.get('status') == SubscriptionStatus.INACTIVE.value:
+            jobName = f"job{ACTIVE_WORKER_COUNTER}"
+            addJob(jobName, str(data.get('interval')), str(data.get('command')), str(data.get('container')))
+            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
+                'subscriptionID': subscriptionID,
+                'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
+                'jobName': jobName
+            })
+            subscriptionResponse.raise_for_status()
+            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API_ID {data.get('availableApiID')} created"}), 200
+        else:
+            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api is already active"}), 400
+    except requests.RequestException as e:
+        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}: str(e)"}), 500
 
 def addJob(jobName, interval, command, container):
     config = configparser.ConfigParser()
@@ -114,22 +137,24 @@ def unsubscribeApi(subscriptionID):
         response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}')
         response.raise_for_status()
         data = response.json()
-        if(deleteJob(data.get('jobName'))):
+        jobName = data.get('jobName')
+        if(deleteJob(jobName)):
             subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.INACTIVE.value,
+                'jobName': None
             })
             subscriptionResponse.raise_for_status()
-            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job deleted"}), 200
+            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job {jobName} deleted"}), 200
         else:
-            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api isn't unsubscribed and job couldn't be deleted"}), 400
+            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api isn't unsubscribed and job {jobName} couldn't be deleted"}), 400
         # Here the counter has to be decremented in the future, but this is done during autocalling
         # The problem is that if I just decrement the counter a job which still runs could be overwritten if
         # for instance 5 jobs (job0, job1, job2, job3, job4) are running and i delete job1 then job number 5
         # would be overwritten because the counter would be decremented to 4 and the new job would be named 
         # job4 (which is already in use)
     except requests.RequestException as e:
-        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}: str(e)"}), 500
+        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}: {str(e)}"}), 500
 
 def deleteJob(jobName):
     config = configparser.ConfigParser()

@@ -123,6 +123,8 @@ def setSubscriptionsStatus():
     dataSubscriptionID = request.json.get('subscriptionID', None)
     dataSubscriptionStatus = request.json.get('subscriptionStatus', None)
     dataJobName = request.json.get('jobName', None)
+    dataCommand = request.json.get('command', None)
+    dataContainer = request.json.get('container', None)
 
     if not dataSubscriptionID or not dataSubscriptionStatus:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}Missing subscriptionID or subscriptionStatus"}), 400
@@ -133,7 +135,7 @@ def setSubscriptionsStatus():
     except ValueError:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Invalid subscriptionStatus value provided. Must be one of {[status.value for status in SubscriptionStatus]}"}), 400
     
-    if subscriptionRepo.setSubsriptionStatus(dataSubscriptionID, validSubscriptionStatus, dataJobName):
+    if subscriptionRepo.setSubsriptionStatus(dataSubscriptionID, validSubscriptionStatus, dataJobName, dataCommand, dataContainer):
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.SUCCESS}subscriptionStatus updated successfully"}), 200
     else:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}subscriptionStatus could not be updated"}), 500
