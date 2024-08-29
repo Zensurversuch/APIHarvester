@@ -71,7 +71,8 @@ services:
 
   worker:
     build:
-      context: ./Worker
+      context: ./
+      dockerfile: Worker/Dockerfile
     container_name: worker
     command: ["sleep", "infinity"]
     secrets:
