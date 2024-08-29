@@ -6,21 +6,35 @@ services:
     ports:
       - "8080:80"
 
-  dataconnector:
+  postgresdataconnector:
     build:
-      context: ./DataConnector/
-    restart: always
+      context: ./
+      dockerfile: DataConnectors/PostgresDataConnector/Dockerfile.${ENV}
+    container_name: postgresdataconnector
+    # restart: always
     ports:
       - "5000:5000"
     depends_on:
       - database
-      - influxdb
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: postgres
       USER_EMAIL: ${USER_EMAIL}
       USER_PASSWORD: ${USER_PASSWORD}
+
+  influxdataconnector:
+    build:
+      context: ./
+      dockerfile: DataConnectors/InfluxDataConnector/Dockerfile.${ENV}
+    container_name: influxdataconnector
+    # restart: always
+    ports:
+      - "5001:5000"
+    depends_on:
+      - influxdb
+      - postgresdataconnector
+    environment:
       INFLUXDB_TOKEN: ${INFLUXDB_TOKEN}
       INFLUXDB_ORG: ${INFLUXDB_ORG}
       INFLUXDB_ADMIN_USER: ${INFLUXDB_ADMIN_USER}
@@ -28,13 +42,41 @@ services:
 
   scheduler:
     build:
-      context: ./Scheduler/
-      dockerfile: Dockerfile.${ENV}
+      context: ./
+      dockerfile: Scheduler/Dockerfile.${ENV}
+    container_name: scheduler
     restart: always
     ports:
-      - "5001:5000"
+      - "5002:5000"
     depends_on:
-      - dataconnector
+      - postgresdataconnector
+      - ofelia
+    volumes:
+      - ./Scheduler/.config:/app/opheliaConfig
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      ENV: ${ENV}
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    container_name: ofelia
+    # restart: always
+    command: daemon --config=/etc/ofelia/config.ini
+    depends_on:
+      - influxdataconnector
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./Scheduler/.config:/etc/ofelia
+
+  worker:
+    build:
+      context: ./Worker
+    container_name: worker
+    command: ["sleep", "infinity"]
+    secrets:
+      - apikeys
+    environment:
+      ENV: ${ENV}
 
   database:
     image: postgres:15
@@ -45,14 +87,17 @@ services:
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgresData:/var/lib/postgresql/data
 
   influxdb:
     image: influxdb:2.7.7
+    container_name: influxdb
     ports:
       - '8086:8086'
     volumes:
-      - influxdb-storage:/var/lib/influxdb
-      - influxdb-config:/etc/influxdb2
+      - influxdbStorage:/var/lib/influxdb2
+      - influxdbConfig:/etc/influxdb2
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_ADMIN_USER}
@@ -62,5 +107,14 @@ services:
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
 
 volumes:
-  influxdb-storage:
-  influxdb-config:
+  influxdbStorage:
+    name: "APIHarvesterInfluxDBStorageVolume"
+  influxdbConfig:
+    name: "APIHarvesterInfluxDBConfigVolume"
+  postgresData:
+    name: "APIHarversterPostgresDataVolume"
+  
+
+secrets:
+  apikeys:
+    file: ./apikeys.txt

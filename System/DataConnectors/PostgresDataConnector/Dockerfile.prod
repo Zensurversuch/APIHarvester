@@ -1,0 +1,16 @@
+FROM python:3.8
+
+WORKDIR /app
+
+COPY ./DataConnectors/PostgresDataConnector/requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+COPY ./commonRessources ./commonRessources
+COPY ./DataConnectors/PostgresDataConnector/ /app/
+
+
+RUN pip install gunicorn
+
+EXPOSE 5000
+
+CMD python /app/initPostgres.py; exec gunicorn --bind 0.0.0.0:5000 app:app

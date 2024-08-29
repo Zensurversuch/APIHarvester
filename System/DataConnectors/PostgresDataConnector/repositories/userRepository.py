@@ -1,6 +1,6 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from db_models.models import User
+from dbModels.models import User
 from random import randint 
 import hashlib
 

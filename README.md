@@ -3,7 +3,8 @@
 ## Short Description
 API Harvester allows periodic collection and visualization of data from pre-configured API endpoints. New APIs can be easily added to expand the platform.
 
-## Setup
+## Setup environment
+### .env file
 
 1. Create a `.env` file in the `System/` directory.
 
@@ -24,6 +25,50 @@ API Harvester allows periodic collection and visualization of data from pre-conf
     INFLUXDB_ORG=apiHarvester
     INFLUXDB_TOKEN=<token>
     ```
+
+### API Keys secrets
+Create a file containing all the required API keys as a key-value file. It should be located under `System/apikeys.txt` and formatted as follows:
+
+``` text
+FINNHUB_KEY=<finnhub api key>
+ALPHA_VANTAGE_KEY=<alpha vantage api key>
+```
+
+## Current fetchable API's
+* Weather API [open-meteo](https://open-meteo.com/)
+  * 10'000 API calls per day
+  * Free to use for non-commercial
+  * No API key needed
+
+* Stocks and exchange rates [Finnhub](https://finnhub.io/)
+  * free 60 API calls/minute.
+  * API key needed
+  * There's a function which returns the needed symbol (id which represents the name of the stock) [here](https://finnhub.io/docs/api/symbol-search)
+  * returns: 
+  ``` json
+    {
+    "c": 183.31,  // Current Price - Latest trading price of the stock.
+    "d": -5.81,   // Change - Absolute change from the previous close.
+    "dp": -3.0721, // Change Percent - Percentage change from the previous close.
+    "h": 185.255, // High - Highest price of the day.
+    "l": 181.81,  // Low - Lowest price of the day.
+    "o": 184.55,  // Open - Price at market open.
+    "pc": 189.12, // Previous Close - Price at the previous market close.
+    "t": 1722888002 // Timestamp - Unix timestamp of the last update.
+}
+
+  ```
+
+
+* Stock market API [ALPHA Vantage](https://www.alphavantage.co/)
+  * free 25 calls per day
+  * API key needed
+  * There's a function which returns the needed symbol (id which represents the name of the stock) [here](https://www.alphavantage.co/documentation/#symbolsearch)  
+  We may give the option that the client is able to fetch all the stocks he wants, in the future
+
+### API's which will be added in the future:
+
+
 
 
 ## Features

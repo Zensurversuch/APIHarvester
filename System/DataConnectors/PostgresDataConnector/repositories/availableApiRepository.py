@@ -1,6 +1,6 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from db_models.models import AvailableApi
+from dbModels.models import AvailableApi
 
 class AvailableApiRepository:
     def __init__(self, engine):
@@ -18,7 +18,20 @@ class AvailableApiRepository:
             return None
         finally:
             session.close()
-    
+
+    def getAvailableApisIds(self):
+        try:
+            session = self.session_factory()
+            availableApisIds = session.query(AvailableApi.availableApiID).all()
+
+            IdsArray = [id[0] for id in availableApisIds]
+            return IdsArray
+        except SQLAlchemyError as e:
+            print(f"AvailableApiRepository: An error occurred while fetching all availableApis: {e}")
+            session.rollback()
+            return None
+        finally:
+            session.close()
 
     def getAvailableApiByID(self, paramAvailableApiID):
         try:
@@ -44,11 +57,12 @@ class AvailableApiRepository:
         finally:
             session.close()
 
-    def createAvailableApi(self, paramUrl, paramDescription, paramSubscriptionType, paramRelevantFields):
+    def createAvailableApi(self, paramUrl, paramName, paramDescription, paramSubscriptionType, paramRelevantFields):
         try:
             session = scoped_session(self.session_factory)
             newAvailableApi = AvailableApi( url = paramUrl,
-                                            description = paramDescription, 
+                                            name = paramName, 
+                                            description = paramDescription,
                                             subscriptionType = paramSubscriptionType,
                                             relevantFields = paramRelevantFields)	
             session.add(newAvailableApi)

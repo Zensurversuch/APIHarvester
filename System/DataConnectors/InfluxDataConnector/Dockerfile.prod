@@ -1,0 +1,15 @@
+FROM python:3.8
+
+WORKDIR /app
+
+COPY ./DataConnectors/InfluxDataConnector/requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+COPY ./commonRessources ./commonRessources
+COPY ./DataConnectors/InfluxDataConnector .
+
+RUN pip install gunicorn
+
+EXPOSE 5000
+
+CMD python /app/initInflux.py; exec gunicorn --bind 0.0.0.0:5000 app:app

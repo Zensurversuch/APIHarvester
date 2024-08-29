@@ -1,6 +1,6 @@
 from sqlalchemy import ARRAY, DateTime, Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import declarative_base
-from interfaces import UserRole, SubscriptionType, SubscriptionStatus
+from commonRessources.interfaces import UserRole, SubscriptionType, SubscriptionStatus
 
 Base = declarative_base()
 
@@ -33,6 +33,8 @@ class Subscription(Base):
     availableApiID = Column(Integer, ForeignKey('availableApi.availableApiID'), nullable=False)
     interval = Column(Integer, nullable=False)
     status = Column(Enum(SubscriptionStatus), nullable=False)
+    jobName = Column(String(64), nullable=True)
+    
 
     def toDict(self):
         return {
@@ -40,14 +42,16 @@ class Subscription(Base):
             'userID': self.userID,
             'availableApiID': self.availableApiID,
             'interval': self.interval,
-            'status': self.status.name 
+            'status': self.status.name,
+            'jobName': self.jobName
         }
 
 class AvailableApi(Base):
     __tablename__ = 'availableApi'
 
     availableApiID = Column(Integer, primary_key=True, autoincrement=True)
-    url = Column(String(200), nullable=False)
+    url = Column(String(500), nullable=False)
+    name = Column(String(200), nullable=False)
     description = Column(String(200), nullable=False)
     subscriptionType = Column(Enum(SubscriptionType), nullable=False)
     relevantFields = Column(ARRAY(String), nullable=False)
@@ -56,9 +60,8 @@ class AvailableApi(Base):
         return {
             'availableApiID': self.availableApiID,
             'url': self.url,
+            'name': self.name,
             'description': self.description,
             'subscriptionType': self.subscriptionType.name,
             'relevantFields': self.relevantFields
         }
-
-
