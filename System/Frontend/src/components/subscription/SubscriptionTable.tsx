@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Modal } from 'react-bootstrap';
+import { Button, Table, Modal, Spinner, Alert } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchSubscriptions, Subscription } from '../../services/subscription/subscriptionService';
 import { useAPI, ApiData } from '../../contexts/ApiDataContext';
-
 
 const SubscriptionTable: React.FC = () => {
   const { userID } = useAuth();
@@ -30,20 +29,28 @@ const SubscriptionTable: React.FC = () => {
         }
       }
     };
-
     loadSubscriptions();
   }, [userID]);
 
-  // Combine subscriptions with API data
+  // Combine subscriptions with API data 
   const combinedData = subscriptions.map((sub) => ({
     subscription: sub,
     api: apiData.find(api => api.availableApiID === sub.availableApiID)
   }));
 
-  if (loading) return <p>Loading subscriptions...</p>;
-  if (apiLoading) return <p>Loading API data...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (apiError) return <p>Error loading API data: {apiError}</p>;
+  if (loading || apiLoading) return (
+    <div className="text-center mt-5">
+      <Spinner animation="border" role="status">
+        <span className="visually-hidden">Loading...</span>
+      </Spinner>
+    </div>
+  );
+
+  if (error || apiError) return (
+    <div className="text-center mt-5">
+      <Alert variant="danger">{error || apiError}</Alert>
+    </div>
+  );
 
   const handleApiNameClick = (api: ApiData) => {
     setSelectedApi(api);
@@ -78,14 +85,14 @@ const SubscriptionTable: React.FC = () => {
                     variant="link"
                     onClick={() => handleApiNameClick(api)}
                   >
-                    {api.description}
+                    {api.name}
                   </Button>
                 ) : (
                   'Unknown API'
                 )}
               </td>
-              <td>{api ? api.relevantFields.join(', ') : 'No description available'}</td>
-              <td>{subscription.interval} days</td>
+              <td>{api ? api.description : 'No description available'}</td>
+              <td>{subscription.interval} seconds</td>
               <td style={{ color: subscription.status === 'ACTIVE' ? 'green' : 'red' }}>
                 {subscription.status}
               </td>

@@ -1,5 +1,5 @@
 // src/services/subscriptionService.ts
-import { POSTGRES_API_BASE_URL } from '../apiConfig';
+import { POSTGRES_API_BASE_URL, SCHEDULER_API_BASE_URL } from '../apiConfig';
 
 export interface Subscription {
   availableApiID: number;
@@ -11,7 +11,7 @@ export interface Subscription {
 
 export const fetchSubscriptions = async (userID: string) => {
   try {
-    const response = await fetch(`${POSTGRES_API_BASE_URL}/subscriptionsByUserID/${userID}`);
+    const response = await fetch(`${POSTGRES_API_BASE_URL}subscriptionsByUserID/${userID}`);
     if (!response.ok) throw new Error('Failed to fetch subscriptions');
     return response.json() as Promise<Subscription[]>;
   } catch (error) {
@@ -20,22 +20,30 @@ export const fetchSubscriptions = async (userID: string) => {
   }
 };
 
-export const addSubscription = async (subscription: Subscription) => {
+export const subscribe = async (userID: string, apiID: number, interval: number): Promise<string> => {
   try {
-    const response = await fetch(`${POSTGRES_API_BASE_URL}/subscriptions`, {
-      method: 'POST',
+    const response = await fetch(`${SCHEDULER_API_BASE_URL}subscribeApi/${userID}/${apiID}/${interval}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(subscription),
     });
-    if (!response.ok) throw new Error('Failed to add subscription');
-    return response.json() as Promise<Subscription>;
+
+    if (!response.ok) {
+      const errorMessage = await response.text(); 
+      console.error('Failed to add subscription:', errorMessage);
+      throw new Error(`Subscription failed: ${errorMessage}`); 
+    }
+
+    const result = await response.json() as Subscription;
+    console.log('Subscription successful:', result);
+    return 'Subscription successful!'; 
   } catch (error) {
     console.error('Failed to add subscription:', error);
-    throw error;
+    throw new Error('Subscription failed due to an error. Please try again later.'); 
   }
 };
+
 
 export const removeSubscription = async (subscriptionID: number) => {
   try {

@@ -5,8 +5,10 @@ from influxdb_client import Point
 from initInflux import influxWriteApi, influxQueryApi, influxbucketApi,influxdbOrg
 from commonRessources.interfaces import ApiStatusMessages
 from commonRessources.constants import API_MESSAGE_DESCRIPTOR
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # -------------------------- InfluxDB Routes ------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/influxWriteData/<apiId>', methods=['POST'])
