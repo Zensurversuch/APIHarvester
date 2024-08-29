@@ -4,6 +4,7 @@ from os import getenv
 import argparse
 from datetime import datetime, timezone
 import json
+from commonRessources import COMPOSE_INFLUX_DATA_CONNECTOR_URL
 
 ENV = getenv('ENV')
 
@@ -29,43 +30,43 @@ def loadApiTokens(file_path):
 
 apiTokens = loadApiTokens('/run/secrets/apikeys')
 
-def writeToInfluxdb(apiId, userId, value, fetchTimestamp):
+def writeToInfluxdb(apiID, subscriptionID, value, fetchTimestamp):
     try:
-        influx_url = f"http://influxdataconnector:5000/influxWriteData/{apiId}"
+        influx_url = f"{COMPOSE_INFLUX_DATA_CONNECTOR_URL}/influxWriteData/{apiID}"
         now = datetime.now(timezone.utc)
         data = {
-            "userID": userId,
+            "subscriptionID": subscriptionID,
             "value": value,
             "fetchTimestamp": fetchTimestamp
         }
         response = requests.post(influx_url, json=data)
         response.raise_for_status()
-        logger.info(f"Successfully sent data to InfluxDB for API ID {apiId}: {data}")
+        logger.info(f"Successfully sent data to InfluxDB for API ID {apiID}: {data}")
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error sending data to InfluxDB for API ID {apiId}: {e}")
+        logger.error(f"Error sending data to InfluxDB for API ID {apiID}: {e}")
 
 
-#python fetchApis.py fetchApi --url <url>
-def fetchApiWithToken(url, userId, apiId):
+#python fetchApis.py fetchApi --url <url> --subscriptionID <subscriptionID> --apiId <apiId>
+def fetchApiWithToken(url, subscriptionID, apiID):
     try:
         response = requests.get(f"{url}&token={apiTokens['FINNHUB_KEY']}")
         response.raise_for_status()
         data = response.json()
         fetchTimestamp = datetime.now().isoformat()
         logger.debug(f"Received data for {url}: {data}")
-        writeToInfluxdb(apiId, userId, json.dumps(data), fetchTimestamp)
+        writeToInfluxdb(apiID, subscriptionID, json.dumps(data), fetchTimestamp)
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data for {url}: {e}")
 
 
-def fetchApiWithoutToken(url, userId, apiId):
+def fetchApiWithoutToken(url, subscriptionID, apiID):
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
         fetchTimestamp = datetime.now().isoformat()
         logger.debug(f"Received data for {url}: {data}")
-        writeToInfluxdb(apiId, userId, json.dumps(data), fetchTimestamp)
+        writeToInfluxdb(apiID, subscriptionID, json.dumps(data), fetchTimestamp)
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data for {url}: {e}")
 
@@ -75,20 +76,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run specific functions from the script.')
     parser.add_argument('function', choices=['fetchApiWithToken', 'fetchApiWithoutToken'], help='Function to run')
     parser.add_argument('--url', help='the Url to fetch')
-    parser.add_argument('--userid', help='the Id of the user which wants to fetch the API')
-    parser.add_argument('--apiid', help='the Id of the API to fetch')
-    
-    
+    parser.add_argument('--subscriptionID', help='the Id of the subscription')
+    parser.add_argument('--apiID', help='the Id of the API to fetch')
 
     args = parser.parse_args()
 
     if args.function == 'fetchApiWithToken':
-        if args.url and args.userid and args.apiid:
-            fetchApiWithToken(args.url, args.userid, args.apiid)
+        if args.url and args.subscriptionID and args.apiID:
+            fetchApiWithToken(args.url, args.subscriptionID, args.apiID)
         else:
-            logger.error("--url & --userid & --apiid argument is required.")
+            logger.error("--url & --subscriptionID & --apiID argument is required.")
     elif args.function == 'fetchApiWithoutToken':
-        if args.url and args.userid and args.apiid:
-            fetchApiWithoutToken(args.url, args.userid, args.apiid)
+        if args.url and args.subscriptionID and args.apiid:
+            fetchApiWithoutToken(args.url, args.subscriptionID, args.apiID)
         else:
-            logger.error("--url & --userid & --apiid  argument is required.")
+            logger.error("--url & --subscriptionID & --apiID  argument is required.")

@@ -6,7 +6,7 @@ import requests
 from os import getenv
 from flask_cors import CORS
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
-from commonRessources.constants import API_MESSAGE_DESCRIPTOR
+from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 
 app = Flask(__name__)
 CORS(app)
@@ -32,16 +32,11 @@ logger = logging.getLogger(__name__)
 
 dockerClient = docker.from_env()
 
-
-@app.route('/hello')
-def hello():
-    return 'Hello, World from Scheduler!'
-
-@app.route('/subscribeApi/<int:userId>/<int:apiId>/<int:interval>', methods=['GET'])
-def subscribeApi(userId, apiId, interval):
+@app.route('/subscribeApi/<int:userId>/<int:apiID>/<int:interval>', methods=['GET'])
+def subscribeApi(userId, apiID, interval):
     global ACTIVE_WORKER_COUNTER
     try:
-        response = requests.get(f'http://postgresdataconnector:5000/availableApi/{apiId}')
+        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}')
         logger.debug(f"response: {response}")
         response.raise_for_status()
 
@@ -49,15 +44,28 @@ def subscribeApi(userId, apiId, interval):
         apiName = apiData.get("name")
         apiUrl = apiData.get("url")
 
-        logger.debug(f"apiData: {apiData}")
-
         if not apiName or not apiUrl:
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}API name or URL not found in response"}), 400
 
+        logger.debug(f"apiData: {apiData}")
+
+        # Create subscription
+        subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/createSubscription', json={
+            'userID': userId,
+            'availableApiID': apiID,
+            'interval': interval,
+            'status': SubscriptionStatus.ACTIVE.value,
+            'jobName': None
+        })
+        subscriptionResponse.raise_for_status()
+
+        subscriptionID = subscriptionResponse.json().get('subscriptionID')
+
+        # Create job entry string for ofelia config file
         if apiName.startswith("Finnhub"):
-            command = f"python /app/fetchScripts/fetchApis.py fetchApiWithToken --url {apiUrl} --userid {userId} --apiid {apiId}"
+            command = f"python /app/fetchScripts/fetchApis.py fetchApiWithToken --url {apiUrl} --subscriptionID {subscriptionID} --apiID {apiID}"
         elif apiName.startswith("Weather"):
-            command = f"python /app/fetchScripts/fetchApis.py fetchApiWithoutToken --url {apiUrl} --userid {userId} --apiid {apiId}"
+            command = f"python /app/fetchScripts/fetchApis.py fetchApiWithoutToken --url {apiUrl} --subscriptionID {subscriptionID} --apiID {apiID}"
         else:
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Unknown API type"}), 400
 
@@ -66,15 +74,12 @@ def subscribeApi(userId, apiId, interval):
         addJob(jobName, interval, command, "worker")
         ACTIVE_WORKER_COUNTER += 1
 
-        # Create subscription
-        subscription_response = requests.post('http://postgresdataconnector:5000/createSubscription', json={
-            'userID': userId,
-            'availableApiID': apiId,
-            'interval': interval,
-            'status': SubscriptionStatus.ACTIVE.value,
+        #set the jobName in the subscription
+        subscription_response = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
+            'subscriptionID': subscriptionID,
+            'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
             'jobName': jobName
         })
-        subscription_response.raise_for_status()
 
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription created"}), 200
 
@@ -98,15 +103,15 @@ def addJob(jobName, interval, command, container):
 
     refreshOfelia()
 
-@app.route('/unsubscribeApi/<int:subscriptionId>', methods=['GET'])
-def unsubscribeApi(subscriptionId):
+@app.route('/unsubscribeApi/<int:subscriptionID>', methods=['GET'])
+def unsubscribeApi(subscriptionID):
     try:
-        response = requests.get(f'http://postgresdataconnector:5000/subscription/{subscriptionId}')
+        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}')
         response.raise_for_status()
         data = response.json()
         if(deleteJob(data.get('jobName'))):
-            subscription_response = requests.post('http://postgresdataconnector:5000/setSubscriptionsStatus', json={
-                'subscriptionID': subscriptionId,
+            subscription_response = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
+                'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.INACTIVE.value,
                 'jobName': None
             })
