@@ -1,10 +1,10 @@
 //import { useAuth } from '../../contexts/AuthContext';
-import { API_BASE_URL } from '../apiConfig'
+import { POSTGRES_API_BASE_URL } from '../apiConfig'
  
 
 export const availableApis = async () => {
     //const { token } = useAuth();
-    const response = await fetch(API_BASE_URL + 'availableApis', {
+    const response = await fetch(POSTGRES_API_BASE_URL + 'availableApis', {
       method: 'GET',
     //  headers: {
      //   'Authorization': `Bearer ${token}`,  

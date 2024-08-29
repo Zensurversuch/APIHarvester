@@ -34,7 +34,7 @@ const Register: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validatePassword(password)) {
-      setError(t('passwordHelpText'));
+      setError(t('registerPasswordHelpText'));
       return;
     }
     if (password !== confirmPassword) {

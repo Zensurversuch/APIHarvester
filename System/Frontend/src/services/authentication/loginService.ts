@@ -1,8 +1,8 @@
-import { API_BASE_URL } from '../apiConfig'
+import { POSTGRES_API_BASE_URL } from '../apiConfig'
 
 export const login = async (data: { email: string; password: string }) => {
 
-    const response = await fetch(API_BASE_URL + 'login', {
+    const response = await fetch(POSTGRES_API_BASE_URL + 'login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

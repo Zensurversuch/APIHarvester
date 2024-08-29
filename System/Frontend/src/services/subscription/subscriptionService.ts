@@ -1,5 +1,5 @@
 // src/services/subscriptionService.ts
-import { API_BASE_URL } from '../apiConfig';
+import { POSTGRES_API_BASE_URL } from '../apiConfig';
 
 export interface Subscription {
   availableApiID: number;
@@ -11,7 +11,7 @@ export interface Subscription {
 
 export const fetchSubscriptions = async (userID: string) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/subscriptionsByUserID/${userID}`);
+    const response = await fetch(`${POSTGRES_API_BASE_URL}/subscriptionsByUserID/${userID}`);
     if (!response.ok) throw new Error('Failed to fetch subscriptions');
     return response.json() as Promise<Subscription[]>;
   } catch (error) {
@@ -22,7 +22,7 @@ export const fetchSubscriptions = async (userID: string) => {
 
 export const addSubscription = async (subscription: Subscription) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/subscriptions`, {
+    const response = await fetch(`${POSTGRES_API_BASE_URL}/subscriptions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export const addSubscription = async (subscription: Subscription) => {
 
 export const removeSubscription = async (subscriptionID: number) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/subscriptions/${subscriptionID}`, {
+    const response = await fetch(`${POSTGRES_API_BASE_URL}/subscriptions/${subscriptionID}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to remove subscription');
