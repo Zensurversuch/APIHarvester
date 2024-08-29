@@ -6,7 +6,7 @@ from flask_jwt_extended import JWTManager, create_access_token
 from flask_cors import CORS
 from os import getenv
 from commonRessources.interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
-from commonRessources.constants import API_MESSAGE_DESCRIPTOR
+from commonRessources import API_MESSAGE_DESCRIPTOR
 from initPostgres import userRepo, subscriptionRepo, availableApiRepo
 
 app = Flask(__name__)
@@ -115,7 +115,6 @@ def subscriptionsByUserID(userID):
     else:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No subscriptions with userID {userID} found"}), 404
 
-
 @app.route('/setSubscriptionsStatus', methods=['POST'])
 def setSubscriptionsStatus():
     if not request.is_json:
@@ -150,7 +149,7 @@ def createSubscription():
     dataStatus = request.json.get('status', None)
     dataJobName = request.json.get('jobName', None)
 
-    if not dataUserID or not dataAvailableApiID or not dataInterval or not dataStatus or not dataJobName:
+    if not dataUserID or not dataAvailableApiID or not dataInterval or not dataStatus:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}Missing userID, availableApiID, interval, status or jobName"}), 400
     
     try:
