@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import configparser
 import logging
 import docker
@@ -30,8 +30,15 @@ logger = logging.getLogger(__name__)
 
 dockerClient = docker.from_env()
 
-@app.route('/subscribeApi/<int:userId>/<int:apiID>/<int:interval>', methods=['GET'])
-def subscribeApi(userId, apiID, interval):
+# Change the following route to Post method
+@app.route('/subscribeApi', methods=['POST'])
+def subscribeApi():
+    if not request.is_json:
+        return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}Missing JSON in the request"}), 400
+    userID = request.json.get('userID')
+    apiID = request.json.get('apiID')
+    interval = request.json.get('interval')
+    
     global ACTIVE_WORKER_COUNTER
     try:
         response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}')
@@ -49,7 +56,7 @@ def subscribeApi(userId, apiID, interval):
 
         # Create subscription
         subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/createSubscription', json={
-            'userID': userId,
+            'userID': userID,
             'availableApiID': apiID,
             'interval': interval,
             'status': SubscriptionStatus.ACTIVE.value,
@@ -108,11 +115,11 @@ def unsubscribeApi(subscriptionID):
         response.raise_for_status()
         data = response.json()
         if(deleteJob(data.get('jobName'))):
-            subscription_response = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
+            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.INACTIVE.value,
-                'jobName': None
             })
+            subscriptionResponse.raise_for_status()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job deleted"}), 200
         else:
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api isn't unsubscribed and job couldn't be deleted"}), 400

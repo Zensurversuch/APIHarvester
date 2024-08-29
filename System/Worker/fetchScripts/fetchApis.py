@@ -4,7 +4,8 @@ from os import getenv
 import argparse
 from datetime import datetime, timezone
 import json
-from commonRessources import COMPOSE_INFLUX_DATA_CONNECTOR_URL
+from commonRessources import COMPOSE_INFLUX_DATA_CONNECTOR_URL, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
+from commonRessources.interfaces import SubscriptionStatus
 
 ENV = getenv('ENV')
 
@@ -29,6 +30,21 @@ def loadApiTokens(file_path):
     return api_tokens
 
 apiTokens = loadApiTokens('/run/secrets/apikeys')
+
+def logErrorToPostgres(apiID, subscriptionID, error_message):
+    try:
+        response = requests.post(
+            f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus",
+            json={
+                "subscriptionID": subscriptionID,
+                "subscriptionStatus": SubscriptionStatus.ERROR.value,
+            }
+        )
+        response.raise_for_status()
+        logger.info(f"Logged error to PostgreSQL for subscription ID {subscriptionID}: {error_message}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to log error to PostgreSQL for subscription ID {subscriptionID}: {e}")
+
 
 def writeToInfluxdb(apiID, subscriptionID, value, fetchTimestamp):
     try:
@@ -57,6 +73,7 @@ def fetchApiWithToken(url, subscriptionID, apiID):
         writeToInfluxdb(apiID, subscriptionID, json.dumps(data), fetchTimestamp)
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data for {url}: {e}")
+        logErrorToPostgres(apiID, subscriptionID, str(e))
 
 
 def fetchApiWithoutToken(url, subscriptionID, apiID):
@@ -69,6 +86,8 @@ def fetchApiWithoutToken(url, subscriptionID, apiID):
         writeToInfluxdb(apiID, subscriptionID, json.dumps(data), fetchTimestamp)
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data for {url}: {e}")
+        logErrorToPostgres(apiID, subscriptionID, str(e))
+
 
 
 
