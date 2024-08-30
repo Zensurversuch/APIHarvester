@@ -1,6 +1,10 @@
 {
     "API_MESSAGE_DESCRIPTOR": "response",
     "POSTGRES_DATA_CONNECTOR_URL": "http://localhost:5000",
+    "INFLUX_DATA_CONNECTOR_URL": "http://localhost:5001",
+    "SCHEDULER_API_URL": "http://localhost:5002",
     "COMPOSE_POSTGRES_DATA_CONNECTOR_URL": "http://postgresdataconnector:5000",
-    "COMPOSE_INFLUX_DATA_CONNECTOR_URL": "http://influxdataconnector:5000"
+    "COMPOSE_INFLUX_DATA_CONNECTOR_URL": "http://influxdataconnector:5000",
+    "COMPOSE_INFLUX_DB_URL": "http://influxdb:8086",
+    "COMPOSE_SCHEDULER_API_URL": "http://scheduler:5002"
 }
