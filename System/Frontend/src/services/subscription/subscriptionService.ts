@@ -21,11 +21,16 @@ export const fetchSubscriptions = async (userID: string) => {
 
 export const subscribe = async (userID: string, apiID: number, interval: number): Promise<string> => {
   try {
-    const response = await fetch(`${SCHEDULER_API_BASE_URL}subscribeApi/${userID}/${apiID}/${interval}`, {
-      method: 'GET',
+    const response = await fetch(`${SCHEDULER_API_BASE_URL}subscribeApi`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        userID: userID,
+        apiID: apiID,
+        interval: interval
+      }),
     });
 
     if (!response.ok) {
@@ -34,7 +39,7 @@ export const subscribe = async (userID: string, apiID: number, interval: number)
       throw new Error(`Subscription failed: ${errorMessage}`); 
     }
 
-    const result = await response.json() as Subscription;
+    const result = await response.json()
     console.log('Subscription successful:', result);
     return 'Subscription successful!'; 
   } catch (error) {
@@ -42,6 +47,30 @@ export const subscribe = async (userID: string, apiID: number, interval: number)
     throw new Error('Subscribing failed due to an error. Please try again later.'); 
   }
 };
+
+export const resubscribe = async (subscriptionID: number): Promise<string> => {
+  try {
+    const response = await fetch(`${SCHEDULER_API_BASE_URL}resubscribeApi/${subscriptionID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text(); 
+      console.error('Failed to activate subscription:', errorMessage);
+      throw new Error(`Subscription failed: ${errorMessage}`); 
+    }
+    const result = await response.json()
+    console.log('Activate subscription successful:', result);
+    return 'Activate subscription successful!'; 
+  } catch (error) {
+    console.error('Failed to activate subscription:', error);
+    throw new Error('Resubscribing failed due to an error. Please try again later.'); 
+  }
+};
+
 
 
 export const unsubscribe = async (subscriptionID: number) => {
