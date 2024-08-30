@@ -81,8 +81,11 @@ class SubscriptionRepository:
             if subscription is None:
                 print(f"SubscriptionRepository: No subscription found with ID {paramSubscriptionID}")
                 return False
+
+            if paramJobName is not None:
+                subscription.jobName = paramJobName
+
             subscription.status = paramSubscriptionStatus
-            subscription.jobName = paramJobName
             session.commit()
             return True
         except SQLAlchemyError as e:
