@@ -113,7 +113,6 @@ def unsubscribeApi(subscriptionID):
             subscription_response = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.INACTIVE.value,
-                'jobName': None
             })
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job deleted"}), 200
         else:

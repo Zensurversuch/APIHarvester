@@ -12,6 +12,7 @@ import Register from './components/login/Register';
 import { APIProvider } from './contexts/ApiDataContext';
 import SubscriptionTable from './components/subscription/SubscriptionTable';
 import ApiList from './components/apis/APIList';
+import DisplayData from './components/subscription/DisplayData';
 
 function App() {
   return (
@@ -38,6 +39,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <SubscriptionTable />
+                      </ProtectedRoute>
+                    }
+                  /> 
+                  <Route
+                    path="/subscriptionData/:subscriptionID/:apiID" 
+                    element={
+                      <ProtectedRoute>
+                        <DisplayData />
                       </ProtectedRoute>
                     }
                   /> 

@@ -1,4 +1,3 @@
-// src/services/subscriptionService.ts
 import { POSTGRES_API_BASE_URL, SCHEDULER_API_BASE_URL } from '../apiConfig';
 
 export interface Subscription {
@@ -40,20 +39,23 @@ export const subscribe = async (userID: string, apiID: number, interval: number)
     return 'Subscription successful!'; 
   } catch (error) {
     console.error('Failed to add subscription:', error);
-    throw new Error('Subscription failed due to an error. Please try again later.'); 
+    throw new Error('Subscribing failed due to an error. Please try again later.'); 
   }
 };
 
 
-export const removeSubscription = async (subscriptionID: number) => {
+export const unsubscribe = async (subscriptionID: number) => {
   try {
-    const response = await fetch(`${POSTGRES_API_BASE_URL}/subscriptions/${subscriptionID}`, {
-      method: 'DELETE',
+    const response = await fetch(`${SCHEDULER_API_BASE_URL}/unsubscribeApi/${subscriptionID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     if (!response.ok) throw new Error('Failed to remove subscription');
     return response.json();
   } catch (error) {
     console.error('Failed to remove subscription:', error);
-    throw error;
+    throw new Error('Unsubscribing failed due to an error. Please try again later.'); 
   }
 };

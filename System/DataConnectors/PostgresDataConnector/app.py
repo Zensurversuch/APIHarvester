@@ -124,7 +124,7 @@ def setSubscriptionsStatus():
     dataSubscriptionStatus = request.json.get('subscriptionStatus', None)
     dataJobName = request.json.get('jobName', None)
 
-    if not dataSubscriptionID or not dataSubscriptionStatus or not dataJobName:
+    if not dataSubscriptionID or not dataSubscriptionStatus:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}Missing subscriptionID or subscriptionStatus"}), 400
     
     try:
