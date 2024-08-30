@@ -3,7 +3,7 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
-COPY ./commonRessources ./commonRessources
+COPY ./commonRessources ./src/commonRessources
 
 COPY ./Frontend/package.json ./Frontend/package-lock.json ./
 
@@ -15,6 +15,7 @@ RUN npm run build
 
 #Serve the React app using Nginx
 FROM nginx:stable-alpine
+
 
 # Copy built files from the previous stage to the Nginx html directory
 COPY --from=build /app/dist /usr/share/nginx/html
