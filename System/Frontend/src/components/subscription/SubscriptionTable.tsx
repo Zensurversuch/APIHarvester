@@ -174,7 +174,7 @@ const SubscriptionTable: React.FC = () => {
                   variant="secondary"
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.location.href = `mailto:support@example.com?subject=Help%20Request&body=Please%20describe%20your%20issue%20with%20subscription%20${subscription.subscriptionID}%20here.`;}}
+                    window.location.href = `mailto:apiharvester@gmail.com?subject=Help%20Request&body=Please%20describe%20your%20issue%20with%20subscription%20${subscription.subscriptionID}%20here.`;}}
                 >
                   Help
                 </Button>             

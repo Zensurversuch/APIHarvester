@@ -8,6 +8,6 @@ RUN pip install gunicorn
 COPY ./commonRessources ./commonRessources
 COPY ./Scheduler .
 
-EXPOSE 5000
+EXPOSE 5010
 
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

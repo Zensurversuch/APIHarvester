@@ -5,7 +5,33 @@ services:
       dockerfile: Frontend/Dockerfile
     restart: always
     ports:
+       - "80"
+    deploy:
+      replicas: 3
+    networks:
+      - loadbalancing
+
+  fronendloadbalancer:
+    build:
+      context: ./
+      dockerfile: LoadBalancer/FrontendLoadBalancer/Dockerfile
+    ports:
       - "8080:80"
+    networks:
+      - loadbalancing
+    depends_on:
+      - frontend
+
+  schedulerloadbalancer:
+    build:
+      context: ./
+      dockerfile: LoadBalancer/SchedulerLoadBalancer/Dockerfile
+    ports:
+      - "5002:80"
+    networks:
+      - loadbalancing
+    depends_on:
+      - scheduler    
 
   postgresdataconnector:
     build:
@@ -23,6 +49,8 @@ services:
       POSTGRES_DB: postgres
       USER_EMAIL: ${USER_EMAIL}
       USER_PASSWORD: ${USER_PASSWORD}
+    networks:
+      - loadbalancing
 
   influxdataconnector:
     build:
@@ -48,7 +76,7 @@ services:
     container_name: scheduler
     restart: always
     ports:
-      - "5002:5000"
+      - "5010"
     depends_on:
       - postgresdataconnector
       - ofelia
@@ -57,6 +85,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       ENV: ${ENV}
+    deploy:
+      replicas: 1
+    networks:
+      - loadbalancing  
 
   ofelia:
     image: mcuadros/ofelia:latest
@@ -107,6 +139,9 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
       DOCKER_INFLUXDB_INIT_BUCKET: initialBucket
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
+
+networks:
+  loadbalancing:
 
 volumes:
   influxdbStorage:
