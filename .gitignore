@@ -1,3 +1,6 @@
+# Development environment
+.devdbrc
+
 # API Keys file
 System/apikeys.txt
 

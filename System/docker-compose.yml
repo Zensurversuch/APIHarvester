@@ -73,12 +73,33 @@ services:
     build:
       context: ./
       dockerfile: Worker/Dockerfile
-    container_name: worker
+    depends_on:
+      - scheduler
+      - ofelia
     command: ["sleep", "infinity"]
+    deploy:
+      replicas: 5
     secrets:
       - apikeys
     environment:
       ENV: ${ENV}
+
+  # dockercli:
+  #   container_name: dockercli
+  #   build:
+  #     context: ./
+  #     dockerfile: DockerCLI/Dockerfile
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - ./docker-compose.yml:/app/docker-compose.yml
+  #   command: ["tail", "-f", "/dev/null"]
+
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
 
   database:
     image: postgres:15
@@ -115,6 +136,8 @@ volumes:
     name: "APIHarvesterInfluxDBConfigVolume"
   postgresData:
     name: "APIHarversterPostgresDataVolume"
+  dockerCompose:
+    name: "APIHarvesterDockerComposeVolume"
   
 
 secrets:

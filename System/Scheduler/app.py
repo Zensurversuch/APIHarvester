@@ -1,38 +1,26 @@
 from flask import Flask, jsonify, request
 import configparser
-import logging
 import docker
 import requests
 from os import getenv
 from flask_cors import CORS
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
+from commonRessources.logger import setLoggerLevel
+import workerCounter, autoscalling
 
 app = Flask(__name__)
+
 CORS(app)
-ENV=getenv('ENV')
 
-CONFIG_FILE = '/app/opheliaConfig/config.ini'
-ACTIVE_WORKER_COUNTER = 0
-
-def initializeCounter():
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
-    global ACTIVE_WORKER_COUNTER
-    ACTIVE_WORKER_COUNTER = sum(1 for section in config.sections() if section.startswith('job-exec "'))
-
-initializeCounter()
-
-if(ENV=='dev'):
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
-
-logger = logging.getLogger(__name__)
+logger = setLoggerLevel("Scheduler")
 
 dockerClient = docker.from_env()
 
-# Change the following route to Post method
+CONFIG_FILE = '/app/opheliaConfig/config.ini'
+
+
+# ******************************************** API Endpoints ********************************************
 @app.route('/subscribeApi', methods=['POST'])
 def subscribeApi():
     if not request.is_json:
@@ -40,8 +28,7 @@ def subscribeApi():
     userID = request.json.get('userID')
     apiID = request.json.get('apiID')
     interval = request.json.get('interval')
-    
-    global ACTIVE_WORKER_COUNTER
+
     try:
         response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}')
         logger.debug(f"response: {response}")
@@ -75,7 +62,7 @@ def subscribeApi():
         else:
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Unknown API type"}), 400
 
-        jobName = f"job{ACTIVE_WORKER_COUNTER}"
+        jobName = f"job{workerCounter.getCounter()}"
 
         #set the jobName, command and container in the subscription
         subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
@@ -85,10 +72,13 @@ def subscribeApi():
             'command': command,
             'container': 'worker'
         })
-
         subscriptionResponse.raise_for_status()
-        addJob(jobName, interval, command, "worker")
-        ACTIVE_WORKER_COUNTER += 1
+        
+        containerName = autoscalling.scaleWorkers()
+        
+        addJob(jobName, interval, command, containerName)
+        workerCounter.updateCounter(True)
+        
 
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API {apiName}; API_ID: {apiID} created"}), 200
 
@@ -102,7 +92,7 @@ def resubscribeApi(subscriptionID):
         response.raise_for_status()
         data = response.json()
         if data.get('status') == SubscriptionStatus.INACTIVE.value:
-            jobName = f"job{ACTIVE_WORKER_COUNTER}"
+            jobName = f"job{workerCounter.getCounter()}"
             addJob(jobName, str(data.get('interval')), str(data.get('command')), str(data.get('container')))
             subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
@@ -110,7 +100,7 @@ def resubscribeApi(subscriptionID):
                 'jobName': jobName
             })
             subscriptionResponse.raise_for_status()
-            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API_ID {data.get('availableApiID')} created"}), 200
+            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API_ID {data.get('availableApiID')} reactivated"}), 200
         else:
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api is already active"}), 400
     except requests.RequestException as e:
