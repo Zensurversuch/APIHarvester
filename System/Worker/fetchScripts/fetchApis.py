@@ -106,7 +106,7 @@ if __name__ == "__main__":
         else:
             logger.error("--url & --subscriptionID & --apiID argument is required.")
     elif args.function == 'fetchApiWithoutToken':
-        if args.url and args.subscriptionID and args.apiid:
+        if args.url and args.subscriptionID and args.apiID:
             fetchApiWithoutToken(args.url, args.subscriptionID, args.apiID)
         else:
             logger.error("--url & --subscriptionID & --apiID  argument is required.")
