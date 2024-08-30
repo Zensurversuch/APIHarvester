@@ -1,19 +1,19 @@
 from os import getenv
 from influxdb_client import InfluxDBClient, BucketRetentionRules
 from influxdb_client.client.write_api import SYNCHRONOUS
+from commonRessources import COMPOSE_INFLUX_DB_URL, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 import time
 import requests
 
 
 # InfluxDB Configs
-influxdbUrl = "http://influxdb:8086"
 influxdbToken = getenv("INFLUXDB_TOKEN")
 influxdbOrg = getenv("INFLUXDB_ORG")
 influxAdminUser = getenv("INFLUXDB_ADMIN_USER")
 influxAdminPassword = getenv("INFLUXDB_ADMIN_PASSWORD")
 
 # Influx Init
-client = InfluxDBClient(url=influxdbUrl, token=influxdbToken, org=influxdbOrg)
+client = InfluxDBClient(url=COMPOSE_INFLUX_DB_URL, token=influxdbToken, org=influxdbOrg)
 influxWriteApi = client.write_api(write_options=SYNCHRONOUS)
 influxbucketApi = client.buckets_api()
 influxQueryApi = client.query_api()
@@ -74,5 +74,5 @@ def getAvailableApiIds(api_url):
     return []
 
 if __name__ == '__main__':
-    availableApiIds = getAvailableApiIds("http://postgresdataconnector:5000/availableApisIds")
+    availableApiIds = getAvailableApiIds(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApisIds")
     initializeInflux(availableApiIds)

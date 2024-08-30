@@ -3,6 +3,8 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
+COPY ./commonRessources ./commonRessources
+
 COPY ./Frontend/package.json ./Frontend/package-lock.json ./
 
 RUN npm install
