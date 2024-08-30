@@ -6,6 +6,8 @@ export interface Subscription {
   status: 'ACTIVE' | 'INACTIVE';
   subscriptionID: number;
   userID: number;
+  jobName: string;
+  container: string;
 }
 
 export const fetchSubscriptions = async (userID: string) => {
@@ -14,7 +16,6 @@ export const fetchSubscriptions = async (userID: string) => {
     if (!response.ok) throw new Error('Failed to fetch subscriptions');
     return response.json() as Promise<Subscription[]>;
   } catch (error) {
-    console.error('Failed to fetch subscriptions:', error);
     throw error;
   }
 };
@@ -35,15 +36,10 @@ export const subscribe = async (userID: string, apiID: number, interval: number)
 
     if (!response.ok) {
       const errorMessage = await response.text(); 
-      console.error('Failed to add subscription:', errorMessage);
       throw new Error(`Subscription failed: ${errorMessage}`); 
     }
-
-    const result = await response.json()
-    console.log('Subscription successful:', result);
     return 'Subscription successful!'; 
-  } catch (error) {
-    console.error('Failed to add subscription:', error);
+  } catch {
     throw new Error('Subscribing failed due to an error. Please try again later.'); 
   }
 };
@@ -59,14 +55,10 @@ export const resubscribe = async (subscriptionID: number): Promise<string> => {
 
     if (!response.ok) {
       const errorMessage = await response.text(); 
-      console.error('Failed to activate subscription:', errorMessage);
       throw new Error(`Subscription failed: ${errorMessage}`); 
     }
-    const result = await response.json()
-    console.log('Activate subscription successful:', result);
     return 'Activate subscription successful!'; 
-  } catch (error) {
-    console.error('Failed to activate subscription:', error);
+  } catch {
     throw new Error('Resubscribing failed due to an error. Please try again later.'); 
   }
 };
@@ -83,8 +75,7 @@ export const unsubscribe = async (subscriptionID: number) => {
     });
     if (!response.ok) throw new Error('Failed to remove subscription');
     return response.json();
-  } catch (error) {
-    console.error('Failed to remove subscription:', error);
+  } catch {
     throw new Error('Unsubscribing failed due to an error. Please try again later.'); 
   }
 };
