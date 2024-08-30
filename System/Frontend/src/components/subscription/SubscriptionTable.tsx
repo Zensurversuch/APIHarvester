@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Spinner, Alert } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
-import { fetchSubscriptions, Subscription, unsubscribe, subscribe } from '../../services/subscription/subscriptionService';
+import { fetchSubscriptions, Subscription, unsubscribe, resubscribe } from '../../services/subscription/subscriptionService';
 import { useAPI, ApiData } from '../../contexts/ApiDataContext';
 import StatusMessage from '../util/StatusMessage';
 import { useNavigate } from 'react-router-dom';
@@ -58,18 +58,16 @@ const SubscriptionTable: React.FC = () => {
     navigate(`/subscriptionData/${subscriptionID}/${apiID}`); // Navigate to the DisplayData page
   };
 
-  const handleSubscribe = async (apiID: number, e: React.MouseEvent) => {
+  const handleSubscribe = async (subscriptionID: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      //TODO michi not working
-      const interval = 60; 
-      await subscribe(userID, apiID, interval);
-      setStatusMessage('Subscription successful!');
+      await resubscribe(subscriptionID);
+      setStatusMessage('Resubscribeing successful!');
       setStatusType('success');
       const data = await fetchSubscriptions(userID);
       setSubscriptions(data);
     } catch (error) {
-      setStatusMessage('Failed to subscribe.');
+      setStatusMessage('Failed to resubscribe.');
       setStatusType('failure');
     }
   };
@@ -147,7 +145,11 @@ const SubscriptionTable: React.FC = () => {
               </td>
               <td>{api ? api.description : 'No description available'}</td>
               <td>{subscription.interval} seconds</td>
-              <td style={{ color: subscription.status === 'ACTIVE' ? 'green' : 'red' }}>
+              <td style={{
+                  color: subscription.status === 'ACTIVE' ? 'green' :
+                        subscription.status === 'INACTIVE' ? 'orange' :
+                        subscription.status === 'ERROR' ? 'red' : 'black'
+                  }}>
                 {subscription.status}
               </td>
               <td>
@@ -162,18 +164,20 @@ const SubscriptionTable: React.FC = () => {
                 {subscription.status === 'INACTIVE' && (
                   <Button
                     variant="primary"
-                    onClick={(e) => handleSubscribe(subscription.availableApiID, e)}
+                    onClick={(e) => handleSubscribe(subscription.subscriptionID, e)}
                   >
                     Subscribe
                   </Button>
                 )}
                 {subscription.status !== 'ACTIVE' && subscription.status !== 'INACTIVE' && (
-                  <Button
-                    variant="secondary"
-                    disabled
-                  >
-                    Not Available
-                  </Button>
+                <Button
+                  variant="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.href = `mailto:support@example.com?subject=Help%20Request&body=Please%20describe%20your%20issue%20with%20subscription%20${subscription.subscriptionID}%20here.`;}}
+                >
+                  Help
+                </Button>             
                 )}
               </td>
             </tr>
