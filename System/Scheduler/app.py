@@ -4,10 +4,12 @@ import logging
 import docker
 import requests
 from os import getenv
+from flask_cors import CORS
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 
 app = Flask(__name__)
+CORS(app)
 ENV=getenv('ENV')
 
 CONFIG_FILE = '/app/opheliaConfig/config.ini'

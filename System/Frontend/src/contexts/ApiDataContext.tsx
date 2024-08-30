@@ -5,13 +5,14 @@ import { availableApis } from '../services/availableApis/availalbeApisService';
 export interface ApiData {
   availableApiID: number;
   description: string;
+  name: string;
   relevantFields: string[];
   subscriptionType: string;
   url: string;
 }
 
 interface APIContextType {
-  apiData: ApiData[]; // Adjusted to match your JSON structure
+  apiData: ApiData[]; 
   loading: boolean;
   error: string | null;
   refreshApiData: () => void;
@@ -29,7 +30,7 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setError(null);
     try {
       const data = await availableApis();
-      setApiData(data); // Expecting data in the shape of ApiData[]
+      setApiData(data);
     } catch (err) {
       setError('Failed to fetch API data');
     } finally {

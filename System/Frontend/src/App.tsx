@@ -7,11 +7,12 @@ import Header from './components/header/Header';
 import Home from './components/home/Home';
 import Login from './components/login/Login';
 import { AuthProvider } from './contexts/AuthContext';
-import APIList from './components/apis/APIList';
 import ProtectedRoute from './components/route/ProtectedRoute';
 import Register from './components/login/Register';
 import { APIProvider } from './contexts/ApiDataContext';
 import SubscriptionTable from './components/subscription/SubscriptionTable';
+import ApiList from './components/apis/APIList';
+import DisplayData from './components/subscription/DisplayData';
 
 function App() {
   return (
@@ -29,7 +30,7 @@ function App() {
                     path="/apis" 
                     element={
                       <ProtectedRoute>
-                        <APIList />
+                        <ApiList />
                       </ProtectedRoute>
                     }
                   /> 
@@ -38,6 +39,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <SubscriptionTable />
+                      </ProtectedRoute>
+                    }
+                  /> 
+                  <Route
+                    path="/subscriptionData/:subscriptionID/:apiID" 
+                    element={
+                      <ProtectedRoute>
+                        <DisplayData />
                       </ProtectedRoute>
                     }
                   /> 

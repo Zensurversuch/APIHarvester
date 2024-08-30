@@ -4,10 +4,13 @@ from flask import Flask, jsonify, request
 from os import getenv
 from influxdb_client import Point
 from initInflux import influxWriteApi, influxQueryApi, influxbucketApi,influxdbOrg
+from flask_cors import CORS
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 
+
 app = Flask(__name__)
+CORS(app)
 
 # -------------------------- InfluxDB Routes ------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/influxWriteData/<int:apiId>', methods=['POST'])
