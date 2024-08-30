@@ -34,7 +34,8 @@ class Subscription(Base):
     interval = Column(Integer, nullable=False)
     status = Column(Enum(SubscriptionStatus), nullable=False)
     jobName = Column(String(64), nullable=True)
-    
+    command = Column(String(512), nullable=True)
+    container = Column(String(64), nullable=True)
 
     def toDict(self):
         return {
@@ -43,7 +44,9 @@ class Subscription(Base):
             'availableApiID': self.availableApiID,
             'interval': self.interval,
             'status': self.status.name,
-            'jobName': self.jobName
+            'jobName': self.jobName,
+            'command': self.command,
+            'container': self.container
         }
 
 class AvailableApi(Base):
