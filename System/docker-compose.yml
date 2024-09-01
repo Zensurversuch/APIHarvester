@@ -1,4 +1,14 @@
 services:
+  frontendloadbalancer:
+    build:
+      context: ./
+      dockerfile: LoadBalancer/FrontendLoadBalancer/Dockerfile
+    container_name: frontendloadbalancer
+    ports:
+      - "8080:80"
+    depends_on:
+      - frontend
+
   frontend:
     build:
       context: ./
@@ -8,75 +18,25 @@ services:
        - "80"
     deploy:
       replicas: 3
-    networks:
-      - loadbalancing
 
-  fronendloadbalancer:
-    build:
-      context: ./
-      dockerfile: LoadBalancer/FrontendLoadBalancer/Dockerfile
-    ports:
-      - "8080:80"
-    networks:
-      - loadbalancing
-    depends_on:
-      - frontend
 
   schedulerloadbalancer:
     build:
       context: ./
       dockerfile: LoadBalancer/SchedulerLoadBalancer/Dockerfile
+    container_name: schedulerloadbalancer
     ports:
       - "5002:80"
-    networks:
-      - loadbalancing
     depends_on:
-      - scheduler    
-
-  postgresdataconnector:
-    build:
-      context: ./
-      dockerfile: DataConnectors/PostgresDataConnector/Dockerfile.${ENV}
-    container_name: postgresdataconnector
-    # restart: always
-    ports:
-      - "5000:5000"
-    depends_on:
-      - database
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
-      USER_EMAIL: ${USER_EMAIL}
-      USER_PASSWORD: ${USER_PASSWORD}
-    networks:
-      - loadbalancing
-
-  influxdataconnector:
-    build:
-      context: ./
-      dockerfile: DataConnectors/InfluxDataConnector/Dockerfile.${ENV}
-    container_name: influxdataconnector
-    # restart: always
-    ports:
-      - "5001:5000"
-    depends_on:
-      - influxdb
-      - postgresdataconnector
-    environment:
-      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN}
-      INFLUXDB_ORG: ${INFLUXDB_ORG}
-      INFLUXDB_ADMIN_USER: ${INFLUXDB_ADMIN_USER}
-      INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
+      - scheduler
 
   scheduler:
     build:
       context: ./
       dockerfile: Scheduler/Dockerfile.${ENV}
-    container_name: scheduler
     restart: always
     ports:
-      - "5010"
+      - "5002"
     depends_on:
       - postgresdataconnector
       - ofelia
@@ -86,9 +46,7 @@ services:
     environment:
       ENV: ${ENV}
     deploy:
-      replicas: 1
-    networks:
-      - loadbalancing  
+      replicas: 3
 
   ofelia:
     image: mcuadros/ofelia:latest
@@ -111,6 +69,39 @@ services:
       - apikeys
     environment:
       ENV: ${ENV}
+  postgresdataconnector:
+    build:
+      context: ./
+      dockerfile: DataConnectors/PostgresDataConnector/Dockerfile.${ENV}
+    container_name: postgresdataconnector
+    # restart: always
+    ports:
+      - "5000:5000"
+    depends_on:
+      - database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      USER_EMAIL: ${USER_EMAIL}
+      USER_PASSWORD: ${USER_PASSWORD}
+
+  influxdataconnector:
+    build:
+      context: ./
+      dockerfile: DataConnectors/InfluxDataConnector/Dockerfile.${ENV}
+    container_name: influxdataconnector
+    # restart: always
+    ports:
+      - "5001:5000"
+    depends_on:
+      - influxdb
+      - postgresdataconnector
+    environment:
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN}
+      INFLUXDB_ORG: ${INFLUXDB_ORG}
+      INFLUXDB_ADMIN_USER: ${INFLUXDB_ADMIN_USER}
+      INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
 
   database:
     image: postgres:15
@@ -140,8 +131,8 @@ services:
       DOCKER_INFLUXDB_INIT_BUCKET: initialBucket
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
 
-networks:
-  loadbalancing:
+
+
 
 volumes:
   influxdbStorage:
