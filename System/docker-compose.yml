@@ -57,6 +57,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       ENV: ${ENV}
+      MAX_NUMBER_WORKERS: ${MAX_NUMBER_WORKERS}
 
   ofelia:
     image: mcuadros/ofelia:latest
@@ -78,22 +79,11 @@ services:
       - ofelia
     command: ["sleep", "infinity"]
     deploy:
-      replicas: 5
+      replicas: ${MAX_NUMBER_WORKERS}
     secrets:
       - apikeys
     environment:
       ENV: ${ENV}
-
-  # dockercli:
-  #   container_name: dockercli
-  #   build:
-  #     context: ./
-  #     dockerfile: DockerCLI/Dockerfile
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - ./docker-compose.yml:/app/docker-compose.yml
-  #   command: ["tail", "-f", "/dev/null"]
-
 
   redis:
     container_name: redis

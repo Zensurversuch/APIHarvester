@@ -24,6 +24,8 @@ API Harvester allows periodic collection and visualization of data from pre-conf
     INFLUXDB_ADMIN_PASSWORD=<admin user password>
     INFLUXDB_ORG=apiHarvester
     INFLUXDB_TOKEN=<token>
+
+    MAX_NUMBER_WORKERS=<number>   # The amount of worker containers has to be set here
     ```
 
 ### API Keys secrets

@@ -5,9 +5,8 @@ COPY ./Scheduler/requirements.txt  /app
 RUN pip install -r requirements.txt
 RUN pip install gunicorn
 
-COPY ./commonRessources ./commonRessources
+COPY ./commonRessources ./code/commonRessources
 COPY ./Scheduler .
 
 EXPOSE 5000
-
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "code/app:app"]

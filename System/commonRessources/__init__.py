@@ -1,6 +1,6 @@
 import json
 import os
-
+from os import getenv
 
 # Load constants from file in order to access them in the python code
 config_path = os.path.join(os.path.dirname(__file__), 'constants.json')
@@ -22,4 +22,4 @@ REDIS_HOST = config['REDIS_HOST']
 REDIS_PORT = config['REDIS_PORT']
 
 MAX_NUMBER_JOBS_PER_WORKER = config['MAX_NUMBER_JOBS_PER_WORKER']
-MAX_NUMBER_WORKERS = config['MAX_NUMBER_WORKERS']
+MAX_NUMBER_WORKERS = int(getenv('MAX_NUMBER_WORKERS', '1'))
