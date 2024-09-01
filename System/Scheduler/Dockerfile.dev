@@ -5,7 +5,7 @@ WORKDIR /app
 COPY ./Scheduler/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY ./commonRessources ./code/commonRessources
+COPY ./commonRessources ./commonRessources
 COPY ./Scheduler .
 
-CMD ["python", "code/app.py"]
+CMD ["python", "app.py"]
