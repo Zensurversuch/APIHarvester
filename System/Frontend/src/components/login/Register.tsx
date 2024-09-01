@@ -44,8 +44,7 @@ const Register: React.FC = () => {
     try {
       await register({email, password, lastName, firstName, role});
       navigate('/login', { state: { message: t('userCreatedSuccess') } });
-    } catch (error) {
-      console.error('Error during registration:', error);
+    } catch {
       setError(t('registerError'));
     }
   };

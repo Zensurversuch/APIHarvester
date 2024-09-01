@@ -6,15 +6,9 @@ from datetime import datetime, timezone
 import json
 from commonRessources import COMPOSE_INFLUX_DATA_CONNECTOR_URL, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 from commonRessources.interfaces import SubscriptionStatus
+from commonRessources.logger import setLoggerLevel
 
-ENV = getenv('ENV')
-
-if ENV == 'dev':
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
-
-logger = logging.getLogger(__name__)
+logger = setLoggerLevel("WorkerFetchApis")
 
 def loadApiTokens(file_path):
     api_tokens = {}
@@ -106,7 +100,7 @@ if __name__ == "__main__":
         else:
             logger.error("--url & --subscriptionID & --apiID argument is required.")
     elif args.function == 'fetchApiWithoutToken':
-        if args.url and args.subscriptionID and args.apiid:
+        if args.url and args.subscriptionID and args.apiID:
             fetchApiWithoutToken(args.url, args.subscriptionID, args.apiID)
         else:
             logger.error("--url & --subscriptionID & --apiID  argument is required.")
