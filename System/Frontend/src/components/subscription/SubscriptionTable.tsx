@@ -117,8 +117,9 @@ const SubscriptionTable: React.FC = () => {
           <tr>
             <th>Subscription ID</th>
             <th>API Name</th>
-            <th>API Description</th>
             <th>Interval</th>
+            <th>Job Name</th>
+            <th>Executing Container</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -143,8 +144,9 @@ const SubscriptionTable: React.FC = () => {
                   'Unknown API'
                 )}
               </td>
-              <td>{api ? api.description : 'No description available'}</td>
               <td>{subscription.interval} seconds</td>
+              <td>{subscription.jobName}</td>
+              <td>{subscription.container}</td>
               <td style={{
                   color: subscription.status === 'ACTIVE' ? 'green' :
                         subscription.status === 'INACTIVE' ? 'orange' :
