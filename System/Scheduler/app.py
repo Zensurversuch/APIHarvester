@@ -5,7 +5,8 @@ from flask_cors import CORS
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 from commonRessources.logger import setLoggerLevel
-import jobCounter, scale, manageJobs
+import jobCounter, scale, manageJobs, lockConfigFile
+import time
 
 app = Flask(__name__)
 
@@ -36,6 +37,9 @@ def subscribeApi():
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}API name or URL not found in response"}), 400
 
         logger.debug(f"apiData: {apiData}")
+
+        while not lockConfigFile.acquireLock():  # If the config file is locked, wait
+            time.sleep(0.5)
 
         # Create subscription
         subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/createSubscription', json={
@@ -69,9 +73,9 @@ def subscribeApi():
         })
         subscriptionResponse.raise_for_status()
 
-
         manageJobs.addJob(jobName, interval, command, containerName)
 
+        lockConfigFile.releaseLock()
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API {apiName}; API_ID: {apiID} created"}), 200
     except requests.RequestException as e:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}{str(e)}"}), 500
@@ -83,9 +87,13 @@ def resubscribeApi(subscriptionID):
         response.raise_for_status()
         data = response.json()
         if data.get('status') == SubscriptionStatus.INACTIVE.value:
+            while not lockConfigFile.acquireLock():  # If the config file is locked, wait
+                time.sleep(0.5)
             jobName = f"job{jobCounter.getHistoricalJobCounter()}"
             containerName = scale.scaleWorkers()
             manageJobs.addJob(jobName, str(data.get('interval')), str(data.get('command')), containerName)
+            lockConfigFile.releaseLock()
+
             subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
@@ -108,6 +116,10 @@ def unsubscribeApi(subscriptionID):
         response.raise_for_status()
         data = response.json()
         jobName = data.get('jobName')
+
+        while not lockConfigFile.acquireLock():  # If the config file is locked, wait
+            time.sleep(0.5)
+
         if(manageJobs.deleteJob(jobName)):
             subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
@@ -115,8 +127,10 @@ def unsubscribeApi(subscriptionID):
                 'jobName': None
             })
             subscriptionResponse.raise_for_status()
+            lockConfigFile.releaseLock()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job {jobName} deleted"}), 200
         else:
+            lockConfigFile.releaseLock()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api isn't unsubscribed and job {jobName} couldn't be deleted"}), 400
     except requests.RequestException as e:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}: {str(e)}"}), 500

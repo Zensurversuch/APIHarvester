@@ -1,15 +1,15 @@
-import jobCounter, scale
+import jobCounter
+import scale
+import lockConfigFile
 import configparser
 import docker
+import time
 from commonRessources.logger import setLoggerLevel
 
 logger = setLoggerLevel("JobManager")
 
-
 CONFIG_FILE = '/app/opheliaConfig/config.ini'
-
 dockerClient = docker.from_env()
-
 
 def addJob(jobName, interval, command, container):
     config = configparser.ConfigParser()
@@ -19,7 +19,7 @@ def addJob(jobName, interval, command, container):
     if sectionName not in config:
         config.add_section(sectionName)
 
-    config[sectionName]['schedule'] = f"@every {interval}s"  #at the moment the interval is given in seconds
+    config[sectionName]['schedule'] = f"@every {interval}s"  # Interval in seconds
     config[sectionName]['command'] = command
     config[sectionName]['container'] = container
 
@@ -30,7 +30,7 @@ def addJob(jobName, interval, command, container):
 
     jobCounter.updateHistoricalJobCounter()
     jobCounter.updateActiveJobCounter(True)
-    
+
 def deleteJob(jobName):
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE)
@@ -51,7 +51,7 @@ def refreshOfelia():
     try:
         container = dockerClient.containers.get('ofelia')
         container.restart()
-        container.reload
+        container.reload()
         logger.info("Ofelia container has been restarted successfully.")
         return "Ofelia container has been restarted successfully."
     except docker.errors.NotFound:
