@@ -8,6 +8,11 @@ from flask_cors import CORS
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 
+apiKey = getenv('INTERNAL_API_KEY')
+headers = {
+    'x-api-key': apiKey
+}
+
 app = Flask(__name__)
 CORS(app)
 ENV=getenv('ENV')
@@ -32,7 +37,6 @@ logger = logging.getLogger(__name__)
 
 dockerClient = docker.from_env()
 
-# Change the following route to Post method
 @app.route('/subscribeApi', methods=['POST'])
 def subscribeApi():
     if not request.is_json:
@@ -43,7 +47,7 @@ def subscribeApi():
     
     global ACTIVE_WORKER_COUNTER
     try:
-        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}')
+        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}', headers=headers)
         logger.debug(f"response: {response}")
         response.raise_for_status()
 
@@ -57,12 +61,14 @@ def subscribeApi():
         logger.debug(f"apiData: {apiData}")
 
         # Create subscription
-        subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/createSubscription', json={
-            'userID': userID,
-            'availableApiID': apiID,
-            'interval': interval,
-            'status': SubscriptionStatus.ACTIVE.value,
-        })
+        subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/createSubscription', 
+                                             json={
+                                                 'userID': userID,
+                                                 'availableApiID': apiID,
+                                                 'interval': interval,
+                                                 'status': SubscriptionStatus.ACTIVE.value,
+                                                 },
+                                             headers=headers)
         subscriptionResponse.raise_for_status()
 
 
@@ -78,13 +84,15 @@ def subscribeApi():
         jobName = f"job{ACTIVE_WORKER_COUNTER}"
 
         #set the jobName, command and container in the subscription
-        subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
-            'subscriptionID': subscriptionID,
-            'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
-            'jobName': jobName,
-            'command': command,
-            'container': 'worker'
-        })
+        subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', 
+                                             json={
+                                                   'subscriptionID': subscriptionID,
+                                                   'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
+                                                   'jobName': jobName,
+                                                   'command': command,
+                                                   'container': 'worker'
+                                                   },
+                                             headers=headers)
 
         subscriptionResponse.raise_for_status()
         addJob(jobName, interval, command, "worker")
@@ -98,17 +106,19 @@ def subscribeApi():
 @app.route('/resubscribeApi/<int:subscriptionID>', methods=['GET'])
 def resubscribeApi(subscriptionID):
     try:
-        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}')
+        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}', headers=headers)
         response.raise_for_status()
         data = response.json()
         if data.get('status') == SubscriptionStatus.INACTIVE.value:
             jobName = f"job{ACTIVE_WORKER_COUNTER}"
             addJob(jobName, str(data.get('interval')), str(data.get('command')), str(data.get('container')))
-            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
-                'subscriptionID': subscriptionID,
-                'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
-                'jobName': jobName
-            })
+            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', 
+                                                 json={
+                                                     'subscriptionID': subscriptionID,
+                                                     'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
+                                                     'jobName': jobName
+                                                     },
+                                                 headers=headers)
             subscriptionResponse.raise_for_status()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API_ID {data.get('availableApiID')} created"}), 200
         else:
@@ -136,7 +146,7 @@ def addJob(jobName, interval, command, container):
 @app.route('/unsubscribeApi/<int:subscriptionID>', methods=['GET'])
 def unsubscribeApi(subscriptionID):
     try:
-        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}')
+        response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}', headers=headers)
         response.raise_for_status()
         data = response.json()
         jobName = data.get('jobName')
@@ -145,7 +155,7 @@ def unsubscribeApi(subscriptionID):
                 'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.INACTIVE.value,
                 'jobName': None
-            })
+            }, headers=headers)
             subscriptionResponse.raise_for_status()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job {jobName} deleted"}), 200
         else:

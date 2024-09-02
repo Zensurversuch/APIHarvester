@@ -23,6 +23,7 @@ services:
       POSTGRES_DB: postgres
       USER_EMAIL: ${USER_EMAIL}
       USER_PASSWORD: ${USER_PASSWORD}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
 
   influxdataconnector:
     build:
@@ -40,6 +41,8 @@ services:
       INFLUXDB_ORG: ${INFLUXDB_ORG}
       INFLUXDB_ADMIN_USER: ${INFLUXDB_ADMIN_USER}
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
 
   scheduler:
     build:
@@ -57,6 +60,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       ENV: ${ENV}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
 
   ofelia:
     image: mcuadros/ofelia:latest
@@ -79,6 +84,8 @@ services:
       - apikeys
     environment:
       ENV: ${ENV}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
 
   database:
     image: postgres:15
