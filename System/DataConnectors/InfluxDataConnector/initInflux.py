@@ -5,6 +5,10 @@ from commonRessources import COMPOSE_INFLUX_DB_URL, COMPOSE_POSTGRES_DATA_CONNEC
 import time
 import requests
 
+apiKey = getenv('INTERNAL_API_KEY')
+headers = {
+    'x-api-key': apiKey
+}
 
 # InfluxDB Configs
 influxdbToken = getenv("INFLUXDB_TOKEN")
@@ -59,11 +63,11 @@ def initializeInflux(bucketIds):
     else:
         print("Max retries reached. Exiting.")
 
-def getAvailableApiIds(api_url):
+def getAvailableApiIds(apiUrl):
     maxRetries = 5
     for attempt in range(maxRetries):
         try:
-            response = requests.get(api_url)
+            response = requests.get(apiUrl, headers=headers)
             response.raise_for_status()  # Raise an exception for HTTP errors
             data = response.json()
             return data

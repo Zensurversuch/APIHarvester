@@ -6,6 +6,11 @@ from datetime import datetime, timezone
 import json
 from commonRessources import COMPOSE_INFLUX_DATA_CONNECTOR_URL, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 from commonRessources.interfaces import SubscriptionStatus
+
+apiKey = getenv('INTERNAL_API_KEY')
+headers = {
+    'x-api-key': apiKey
+}
 from commonRessources.logger import setLoggerLevel
 
 logger = setLoggerLevel("WorkerFetchApis")
@@ -27,13 +32,12 @@ apiTokens = loadApiTokens('/run/secrets/apikeys')
 
 def logErrorToPostgres(apiID, subscriptionID, error_message):
     try:
-        response = requests.post(
-            f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus",
+        response = requests.post(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus",
             json={
                 "subscriptionID": subscriptionID,
                 "subscriptionStatus": SubscriptionStatus.ERROR.value,
-            }
-        )
+            },
+            headers=headers)
         response.raise_for_status()
         logger.info(f"Logged error to PostgreSQL for subscription ID {subscriptionID}: {error_message}")
     except requests.exceptions.RequestException as e:
@@ -49,7 +53,7 @@ def writeToInfluxdb(apiID, subscriptionID, value, fetchTimestamp):
             "value": value,
             "fetchTimestamp": fetchTimestamp
         }
-        response = requests.post(influx_url, json=data)
+        response = requests.post(influx_url, json=data, headers=headers)
         response.raise_for_status()
         logger.info(f"Successfully sent data to InfluxDB for API ID {apiID}: {data}")
     except requests.exceptions.RequestException as e:

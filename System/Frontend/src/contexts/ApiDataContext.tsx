@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { availableApis } from '../services/availableApis/availalbeApisService';
+import { availableApis } from '../services/availableApis/availableApisService';
 
 
 export interface ApiData {

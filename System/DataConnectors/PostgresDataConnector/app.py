@@ -7,6 +7,7 @@ from flask_cors import CORS
 from os import getenv
 from commonRessources.interfaces import UserRole, ApiStatusMessages, SubscriptionStatus, SubscriptionType
 from commonRessources import API_MESSAGE_DESCRIPTOR
+from commonRessources.decorators import accessControlApiKey, accessControlJwtOrApiKey, accessControlJwt
 from initPostgres import userRepo, subscriptionRepo, availableApiRepo
 
 app = Flask(__name__)
@@ -36,7 +37,9 @@ def login():
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}Missing email or password"}), 400
     user = userRepo.getUserByEmail(dataEmail)
     if user and (hashedPassword == user.password):
-        access_token = create_access_token(identity=user.userID, expires_delta=timedelta(hours=1))
+        access_token = create_access_token(identity=user.userID, 
+                                           expires_delta=timedelta(hours=1),
+                                           additional_claims={'role': user.role.value})
         userRepo.updateUserLastLogin(user.userID, datetime.now())
         return jsonify(access_token=access_token, userID = user.userID, role = user.role.value), 200
     else:
@@ -76,6 +79,7 @@ def createUser():
 
 # -------------------------- PostgreSQL Subscription Routes -------------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/subscriptions', methods=['GET'])
+@accessControlJwtOrApiKey
 def subscriptions():
     subscriptions = subscriptionRepo.getSubscriptions()
     if subscriptions is not None:
@@ -85,6 +89,7 @@ def subscriptions():
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No subscriptions found"}), 404
     
 @app.route('/subscription/<int:subscriptionID>', methods=['GET'])
+@accessControlApiKey
 def subscription(subscriptionID):
     subscription = subscriptionRepo.getSubscriptionByID(subscriptionID)
     if subscription is not None:
@@ -92,7 +97,7 @@ def subscription(subscriptionID):
     else:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No subscription with ID {subscriptionID} found"}), 404
 
-@app.route('/subscriptionsByStatus/<string:subscriptionStatus>', methods=['GET'])
+@app.route('/subscriptionsByStatus/<string:subscriptionStatus>', methods=['GET'])       # NOT USED AT THE MOMENT
 def subscriptionsByStatus(subscriptionStatus):
     try:
         # Attempt to match the status with the Enum
@@ -107,6 +112,7 @@ def subscriptionsByStatus(subscriptionStatus):
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No subscriptions with Status {subscriptionStatus} found"}), 404
 
 @app.route('/subscriptionsByUserID/<string:userID>', methods=['GET'])
+@accessControlJwt
 def subscriptionsByUserID(userID):
     subscriptions = subscriptionRepo.getSubscriptionsByUserID(userID)   
     if subscriptions is not None:
@@ -116,6 +122,7 @@ def subscriptionsByUserID(userID):
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No subscriptions with userID {userID} found"}), 404
 
 @app.route('/setSubscriptionsStatus', methods=['POST'])
+@accessControlApiKey
 def setSubscriptionsStatus():
     if not request.is_json:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}Missing JSON in the request"}), 400
@@ -141,6 +148,7 @@ def setSubscriptionsStatus():
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}subscriptionStatus could not be updated"}), 500
 
 @app.route('/createSubscription', methods=['POST'])
+@accessControlApiKey
 def createSubscription():
     if not request.is_json:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}Missing JSON in the request"}), 400
@@ -176,6 +184,7 @@ def createSubscription():
 
 # -------------------------- PostgreSQL AvailableApi Routes -------------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/availableApis', methods=['GET'])
+@accessControlJwt
 def availableApis():
     availableApis = availableApiRepo.getAvailableApis()
     if availableApis is not None:
@@ -185,6 +194,7 @@ def availableApis():
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No availableApis found"}), 404
 
 @app.route('/availableApisIds', methods=['GET'])
+@accessControlApiKey
 def availableApisIds():
     Ids = availableApiRepo.getAvailableApisIds()
     if Ids is not None:
@@ -193,6 +203,7 @@ def availableApisIds():
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No availableApis found"}), 404
 
 @app.route('/availableApi/<int:availableApiID>', methods=['GET'])
+@accessControlApiKey
 def availableApi(availableApiID):
     availableApi = availableApiRepo.getAvailableApiByID(availableApiID)
     if availableApi is not None:
@@ -200,7 +211,7 @@ def availableApi(availableApiID):
     else:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No availableApiID with ID {availableApiID} found"}), 404
 
-@app.route('/availableApisBySubscriptionType/<string:subscriptionType>', methods=['GET'])
+@app.route('/availableApisBySubscriptionType/<string:subscriptionType>', methods=['GET'])       # NOT USED AT THE MOMENT
 def availableApisBySubscriptionType(subscriptionType):
     try:
         # Attempt to match the status with the Enum
@@ -215,7 +226,7 @@ def availableApisBySubscriptionType(subscriptionType):
     else:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}No availableApis with subscriptionType {subscriptionType} found"}), 404
 
-@app.route('/createAvailableApi', methods=['POST'])
+@app.route('/createAvailableApi', methods=['POST'])     # NOT USED AT THE MOMENT
 def createAvailableApi():
     if not request.is_json:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}Missing JSON in the request"}), 400
