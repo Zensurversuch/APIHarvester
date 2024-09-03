@@ -30,3 +30,16 @@ class SubscriptionStatus(Enum):
 
     def __str__(self):
         return self.name
+    
+class Permissions(Enum):
+    # InfluxDB permissions
+    INFLUX_GET_DATA = "influxGetData"
+    
+    # PostgreSQL permissions
+    AVAILABLE_APIS = "availableApis"
+    SUBSCRIPTIONS = "subscriptions"
+    SUBSCRIPTIONS_BY_USER_ID = "subscriptionsByUserID"
+    
+    
+    def __str__(self):
+        return self.value

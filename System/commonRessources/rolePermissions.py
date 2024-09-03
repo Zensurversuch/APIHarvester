@@ -1,19 +1,26 @@
-from interfaces import UserRole
+from commonRessources.interfaces import UserRole, Permissions
 
 def getPermissionsForRole(role):
-    # Check if the role is an instance of UserRole
-    if not isinstance(role, UserRole):
-        print(f"Invalid role: {role}. Please use a valid UserRole instance.")
-        return []
-    for line in permissionsData.split('\n'):
-        parts = line.strip().split(':')
-        if parts[0] == str(role):
-            return parts[1].split(',')
-    return []
-
-
-permissionsData = """
-ADMIN:hello
-USER:hello
-PREMIUM_USER:
-"""
+    permissions = []
+    if role == UserRole.ADMIN.value:
+        permissions = [
+            Permissions.INFLUX_GET_DATA.value,
+            Permissions.AVAILABLE_APIS.value,
+            Permissions.SUBSCRIPTIONS.value,
+            Permissions.SUBSCRIPTIONS_BY_USER_ID.value
+        ]
+    elif role == UserRole.USER.value:
+        permissions = [
+            Permissions.INFLUX_GET_DATA.value,
+            Permissions.AVAILABLE_APIS.value,
+            Permissions.SUBSCRIPTIONS.value,
+            Permissions.SUBSCRIPTIONS_BY_USER_ID.value
+        ]
+    elif role == UserRole.PREMIUM_USER.value:
+        permissions = [
+            Permissions.INFLUX_GET_DATA.value,
+            Permissions.AVAILABLE_APIS.value,
+            Permissions.SUBSCRIPTIONS.value,
+            Permissions.SUBSCRIPTIONS_BY_USER_ID.value
+]
+    return permissions

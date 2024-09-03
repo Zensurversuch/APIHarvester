@@ -1,4 +1,6 @@
 import { POSTGRES_API_BASE_URL, SCHEDULER_API_BASE_URL } from '../apiConfig';
+import { getAuthData } from '../authentication/authService';
+
 
 export interface Subscription {
   availableApiID: number;
@@ -12,7 +14,15 @@ export interface Subscription {
 
 export const fetchSubscriptions = async (userID: string) => {
   try {
-    const response = await fetch(`${POSTGRES_API_BASE_URL}subscriptionsByUserID/${userID}`);
+    const {token} = getAuthData();
+    const response = await fetch(`${POSTGRES_API_BASE_URL}subscriptionsByUserID/${userID}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,  
+        'Content-Type': 'application/json',
+      },
+    }
+    );
     if (!response.ok) throw new Error('Failed to fetch subscriptions');
     return response.json() as Promise<Subscription[]>;
   } catch (error) {
@@ -22,9 +32,11 @@ export const fetchSubscriptions = async (userID: string) => {
 
 export const subscribe = async (userID: string, apiID: number, interval: number): Promise<string> => {
   try {
+    const {token} = getAuthData();
     const response = await fetch(`${SCHEDULER_API_BASE_URL}subscribeApi`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${token}`,  
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -46,9 +58,11 @@ export const subscribe = async (userID: string, apiID: number, interval: number)
 
 export const resubscribe = async (subscriptionID: number): Promise<string> => {
   try {
+    const {token} = getAuthData();
     const response = await fetch(`${SCHEDULER_API_BASE_URL}resubscribeApi/${subscriptionID}`, {
       method: 'GET',
       headers: {
+        'Authorization': `Bearer ${token}`,  
         'Content-Type': 'application/json',
       },
     });
@@ -67,9 +81,11 @@ export const resubscribe = async (subscriptionID: number): Promise<string> => {
 
 export const unsubscribe = async (subscriptionID: number) => {
   try {
+    const {token} = getAuthData();
     const response = await fetch(`${SCHEDULER_API_BASE_URL}/unsubscribeApi/${subscriptionID}`, {
       method: 'GET',
       headers: {
+        'Authorization': `Bearer ${token}`,  
         'Content-Type': 'application/json',
       },
     });

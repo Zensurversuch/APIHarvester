@@ -12,6 +12,8 @@ API Harvester allows periodic collection and visualization of data from pre-conf
 
     ```env
     JWT_SECRET_KEY=<jwt key>                  # Set the secret key for the JWT token
+    INTERNAL_API_KEY=<apikeyXY>               # Set an API_KEY here, which is used in order for the intern service-service API's
+
     ENV=<prod | dev>                          # Environment mode: 'dev' for development, 'prod' for production
 
     #PostgreSQL variables

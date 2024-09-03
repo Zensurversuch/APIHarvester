@@ -1,19 +1,28 @@
 import requests
 from datetime import timedelta, datetime, timezone
 from flask import Flask, jsonify, request
+from flask_jwt_extended import JWTManager
 from os import getenv
 from influxdb_client import Point
 from initInflux import influxWriteApi, influxQueryApi, influxbucketApi,influxdbOrg
 from flask_cors import CORS
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
+from commonRessources.decorators import accessControlApiKey, accessControlJwtOrApiKey
 
-
+apiKey = getenv('INTERNAL_API_KEY')
+headers = {
+    'x-api-key': apiKey
+}
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = f"{getenv('JWT_SECRET_KEY')}"
+
+jwt = JWTManager(app)
 CORS(app)
 
 # -------------------------- InfluxDB Routes ------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/influxWriteData/<int:apiId>', methods=['POST'])
+@accessControlApiKey
 def influxWriteData(apiId):
     data = request.json
     subscriptionID = data.get("subscriptionID")
@@ -25,7 +34,7 @@ def influxWriteData(apiId):
 
     # Check if the subscriptionId exists
     try:
-        response = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}")
+        response = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}", headers=headers)
         response.raise_for_status()
         subscriptionData = response.json()
         if not subscriptionData:
@@ -52,11 +61,11 @@ def influxWriteData(apiId):
 
 # timespan (minutes) is used to restrict the query to a certain time period in the past
 @app.route('/influxGetData/<int:subscriptionID>/<int:queryTimespan>', methods=['GET']) 
-# @jwt_required()
+@accessControlJwtOrApiKey
 def influxGetData(subscriptionID, queryTimespan):
     # Fetch subscription data to get availableAPIID
     try:
-        response = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}")
+        response = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}", headers=headers)
         response.raise_for_status()
         subscriptionData = response.json()
         apiId = subscriptionData.get("availableApiID")
@@ -84,8 +93,8 @@ def influxGetData(subscriptionID, queryTimespan):
 
     return jsonify(result), 200
 
-
 @app.route('/influxGetBuckets', methods=['GET'])
+@accessControlApiKey
 def getBuckets():
     try:
         buckets = influxbucketApi.find_buckets_iter()
