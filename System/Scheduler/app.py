@@ -159,6 +159,12 @@ def unsubscribeApi(subscriptionID):
             subscriptionResponse.raise_for_status()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job {jobName} deleted"}), 200
         else:
+            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
+                'subscriptionID': subscriptionID,
+                'subscriptionStatus': SubscriptionStatus.ERROR.value,
+                'jobName': None
+            }, headers=headers)
+            subscriptionResponse.raise_for_status()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api isn't unsubscribed and job {jobName} couldn't be deleted"}), 400
         # Here the counter has to be decremented in the future, but this is done during autocalling
         # The problem is that if I just decrement the counter a job which still runs could be overwritten if
