@@ -1,12 +1,12 @@
 from flask import Flask, jsonify, request
-import configparser
-import logging
-import docker
 import requests
 from os import getenv
 from flask_cors import CORS
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
+from commonRessources.logger import setLoggerLevel
+import jobCounter, scale, manageJobs, lockConfigFile
+import time
 
 apiKey = getenv('INTERNAL_API_KEY')
 headers = {
@@ -14,7 +14,10 @@ headers = {
 }
 
 app = Flask(__name__)
+
 CORS(app)
+
+logger = setLoggerLevel("Scheduler")
 ENV=getenv('ENV')
 
 CONFIG_FILE = '/app/opheliaConfig/config.ini'
@@ -37,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 dockerClient = docker.from_env()
 
+# Change the following route to Post method
 @app.route('/subscribeApi', methods=['POST'])
 def subscribeApi():
     if not request.is_json:
@@ -44,8 +48,7 @@ def subscribeApi():
     userID = request.json.get('userID')
     apiID = request.json.get('apiID')
     interval = request.json.get('interval')
-    
-    global ACTIVE_WORKER_COUNTER
+
     try:
         response = requests.get(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}', headers=headers)
         logger.debug(f"response: {response}")
@@ -59,6 +62,9 @@ def subscribeApi():
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}API name or URL not found in response"}), 400
 
         logger.debug(f"apiData: {apiData}")
+
+        while not lockConfigFile.acquireLock():  # If the config file is locked, wait
+            time.sleep(0.5)
 
         # Create subscription
         subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/createSubscription', 
@@ -81,7 +87,8 @@ def subscribeApi():
         else:
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Unknown API type"}), 400
 
-        jobName = f"job{ACTIVE_WORKER_COUNTER}"
+        jobName = f"job{jobCounter.getHistoricalJobCounter()}"
+        containerName = scale.scaleWorkers()
 
         #set the jobName, command and container in the subscription
         subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', 
@@ -90,16 +97,15 @@ def subscribeApi():
                                                    'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
                                                    'jobName': jobName,
                                                    'command': command,
-                                                   'container': 'worker'
+                                                   'container': containerName
                                                    },
                                              headers=headers)
-
         subscriptionResponse.raise_for_status()
-        addJob(jobName, interval, command, "worker")
-        ACTIVE_WORKER_COUNTER += 1
 
+        manageJobs.addJob(jobName, interval, command, containerName)
+
+        lockConfigFile.releaseLock()
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API {apiName}; API_ID: {apiID} created"}), 200
-
     except requests.RequestException as e:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}{str(e)}"}), 500
 
@@ -110,38 +116,29 @@ def resubscribeApi(subscriptionID):
         response.raise_for_status()
         data = response.json()
         if data.get('status') == SubscriptionStatus.INACTIVE.value:
-            jobName = f"job{ACTIVE_WORKER_COUNTER}"
-            addJob(jobName, str(data.get('interval')), str(data.get('command')), str(data.get('container')))
+            while not lockConfigFile.acquireLock():  # If the config file is locked, wait
+                time.sleep(0.5)
+            jobName = f"job{jobCounter.getHistoricalJobCounter()}"
+            containerName = scale.scaleWorkers()
+            manageJobs.addJob(jobName, str(data.get('interval')), str(data.get('command')), containerName)
+            lockConfigFile.releaseLock()
+
             subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', 
                                                  json={
                                                      'subscriptionID': subscriptionID,
                                                      'subscriptionStatus': SubscriptionStatus.ACTIVE.value,
-                                                     'jobName': jobName
+                                                     'jobName': jobName,
+                'container': containerName
                                                      },
                                                  headers=headers)
             subscriptionResponse.raise_for_status()
-            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API_ID {data.get('availableApiID')} created"}), 200
+            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API_ID {data.get('availableApiID')} reactivated"}), 200
         else:
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api is already active"}), 400
     except requests.RequestException as e:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}: str(e)"}), 500
 
-def addJob(jobName, interval, command, container):
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
 
-    sectionName = f'job-exec "{jobName}"'
-    if sectionName not in config:
-        config.add_section(sectionName)
-
-    config[sectionName]['schedule'] = f"@every {interval}s"  #at the moment the interval is given in seconds
-    config[sectionName]['command'] = command
-    config[sectionName]['container'] = container
-
-    with open(CONFIG_FILE, 'w') as configfile:
-        config.write(configfile)
-
-    refreshOfelia()
 
 @app.route('/unsubscribeApi/<int:subscriptionID>', methods=['GET'])
 def unsubscribeApi(subscriptionID):
@@ -150,13 +147,18 @@ def unsubscribeApi(subscriptionID):
         response.raise_for_status()
         data = response.json()
         jobName = data.get('jobName')
-        if(deleteJob(jobName)):
+
+        while not lockConfigFile.acquireLock():  # If the config file is locked, wait
+            time.sleep(0.5)
+
+        if(manageJobs.deleteJob(jobName)):
             subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.INACTIVE.value,
                 'jobName': None
             }, headers=headers)
             subscriptionResponse.raise_for_status()
+            lockConfigFile.releaseLock()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job {jobName} deleted"}), 200
         else:
             subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
@@ -165,42 +167,12 @@ def unsubscribeApi(subscriptionID):
                 'jobName': None
             }, headers=headers)
             subscriptionResponse.raise_for_status()
+            lockConfigFile.releaseLock()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Api isn't unsubscribed and job {jobName} couldn't be deleted"}), 400
-        # Here the counter has to be decremented in the future, but this is done during autocalling
-        # The problem is that if I just decrement the counter a job which still runs could be overwritten if
-        # for instance 5 jobs (job0, job1, job2, job3, job4) are running and i delete job1 then job number 5
-        # would be overwritten because the counter would be decremented to 4 and the new job would be named 
-        # job4 (which is already in use)
     except requests.RequestException as e:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}: {str(e)}"}), 500
 
-def deleteJob(jobName):
-    config = configparser.ConfigParser()
-    config.read(CONFIG_FILE)
 
-    section_name = f'job-exec "{jobName}"'
-    if section_name in config:
-        config.remove_section(section_name)
-        with open(CONFIG_FILE, 'w') as configfile:
-            config.write(configfile)
-        refreshOfelia()
-        return True
-    else:
-        return False
-
-def refreshOfelia():
-    try:
-        container = dockerClient.containers.get('ofelia')
-        container.restart()
-        container.reload
-        logger.info("Ofelia container has been restarted successfully.")
-        return "Ofelia container has been restarted successfully."
-    except docker.errors.NotFound:
-        logger.error("Ofelia container not found.")
-        return "Ofelia container not found."
-    except docker.errors.APIError as e:
-        logger.error(f"Error restarting Ofelia container: {str(e)}")
-        return f"Error restarting Ofelia container: {str(e)}"
 
 if __name__ == '__main__':
-      app.run(host='0.0.0.0', port=5000, debug=True)
+      app.run(host='0.0.0.0', port=5002, debug=True)

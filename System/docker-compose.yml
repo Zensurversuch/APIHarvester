@@ -1,11 +1,83 @@
 services:
+  frontendloadbalancer:
+    build:
+      context: ./
+      dockerfile: LoadBalancer/FrontendLoadBalancer/Dockerfile
+    container_name: frontendloadbalancer
+    ports:
+      - "8080:80"
+    depends_on:
+      - frontend
+
   frontend:
     build:
       context: ./
       dockerfile: Frontend/Dockerfile
     restart: always
     ports:
-      - "8080:80"
+       - "80"
+    deploy:
+      replicas: 3
+
+  schedulerloadbalancer:
+    build:
+      context: ./
+      dockerfile: LoadBalancer/SchedulerLoadBalancer/Dockerfile
+    container_name: schedulerloadbalancer
+    ports:
+      - "5002:80"
+    depends_on:
+      - scheduler
+  
+  scheduler:
+    build:
+      context: ./
+      dockerfile: Scheduler/Dockerfile.${ENV}
+    container_name: scheduler
+    restart: always
+    ports:
+      - "5002:5000"
+    depends_on:
+      - postgresdataconnector
+      - ofelia
+    volumes:
+      - ./Scheduler/.config:/app/opheliaConfig
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      ENV: ${ENV}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    container_name: ofelia
+    # restart: always
+    command: daemon --config=/etc/ofelia/config.ini
+    depends_on:
+      - influxdataconnector
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./Scheduler/.config:/etc/ofelia
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  worker:
+    build:
+      context: ./
+      dockerfile: Worker/Dockerfile
+    depends_on:
+      - scheduler
+      - ofelia
+    command: ["sleep", "infinity"]
+    deploy:
+      replicas: ${MAX_NUMBER_WORKERS}
+    secrets:
+      - apikeys
+    environment:
+      ENV: ${ENV}
 
   postgresdataconnector:
     build:
@@ -43,50 +115,6 @@ services:
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
 
-
-  scheduler:
-    build:
-      context: ./
-      dockerfile: Scheduler/Dockerfile.${ENV}
-    container_name: scheduler
-    restart: always
-    ports:
-      - "5002:5000"
-    depends_on:
-      - postgresdataconnector
-      - ofelia
-    volumes:
-      - ./Scheduler/.config:/app/opheliaConfig
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      ENV: ${ENV}
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-
-
-  ofelia:
-    image: mcuadros/ofelia:latest
-    container_name: ofelia
-    # restart: always
-    command: daemon --config=/etc/ofelia/config.ini
-    depends_on:
-      - influxdataconnector
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./Scheduler/.config:/etc/ofelia
-
-  worker:
-    build:
-      context: ./
-      dockerfile: Worker/Dockerfile
-    container_name: worker
-    command: ["sleep", "infinity"]
-    secrets:
-      - apikeys
-    environment:
-      ENV: ${ENV}
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-
-
   database:
     image: postgres:15
     restart: always
@@ -115,6 +143,9 @@ services:
       DOCKER_INFLUXDB_INIT_BUCKET: initialBucket
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
 
+
+
+
 volumes:
   influxdbStorage:
     name: "APIHarvesterInfluxDBStorageVolume"
@@ -122,6 +153,8 @@ volumes:
     name: "APIHarvesterInfluxDBConfigVolume"
   postgresData:
     name: "APIHarversterPostgresDataVolume"
+  dockerCompose:
+    name: "APIHarvesterDockerComposeVolume"
   
 
 secrets:

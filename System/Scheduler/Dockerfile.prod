@@ -1,13 +1,14 @@
 FROM python:3.8
 
 WORKDIR /app
-COPY ./Scheduler/requirements.txt  /app
+
+COPY ./Scheduler/requirements.txt /app
 RUN pip install -r requirements.txt
 RUN pip install gunicorn
 
-COPY ./commonRessources ./commonRessources
-COPY ./Scheduler .
+COPY ./commonRessources /app/commonRessources
+COPY ./Scheduler /app/
 
-EXPOSE 5000
+EXPOSE 5002
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5002", "app:app"]

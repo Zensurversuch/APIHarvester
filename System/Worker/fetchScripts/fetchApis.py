@@ -11,15 +11,9 @@ apiKey = getenv('INTERNAL_API_KEY')
 headers = {
     'x-api-key': apiKey
 }
+from commonRessources.logger import setLoggerLevel
 
-ENV = getenv('ENV')
-
-if ENV == 'dev':
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
-
-logger = logging.getLogger(__name__)
+logger = setLoggerLevel("WorkerFetchApis")
 
 def loadApiTokens(file_path):
     api_tokens = {}
