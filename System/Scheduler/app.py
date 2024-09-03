@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 import requests
 from os import getenv
 from flask_cors import CORS
+import configparser
 from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 from commonRessources.logger import setLoggerLevel
@@ -30,15 +31,6 @@ def initializeCounter():
     ACTIVE_WORKER_COUNTER = sum(1 for section in config.sections() if section.startswith('job-exec "'))
 
 initializeCounter()
-
-if(ENV=='dev'):
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
-
-logger = logging.getLogger(__name__)
-
-dockerClient = docker.from_env()
 
 # Change the following route to Post method
 @app.route('/subscribeApi', methods=['POST'])
@@ -152,19 +144,21 @@ def unsubscribeApi(subscriptionID):
             time.sleep(0.5)
 
         if(manageJobs.deleteJob(jobName)):
-            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
+            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.INACTIVE.value,
-                'jobName': None
+                'jobName': None,
+                'container': None
             }, headers=headers)
             subscriptionResponse.raise_for_status()
             lockConfigFile.releaseLock()
             return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Api unsubsribed and job {jobName} deleted"}), 200
         else:
-            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}//setSubscriptionsStatus', json={
+            subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
                 'subscriptionID': subscriptionID,
                 'subscriptionStatus': SubscriptionStatus.ERROR.value,
-                'jobName': None
+                'jobName': None,
+                'container': None
             }, headers=headers)
             subscriptionResponse.raise_for_status()
             lockConfigFile.releaseLock()

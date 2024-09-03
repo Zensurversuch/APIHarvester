@@ -84,10 +84,9 @@ class SubscriptionRepository:
 
             if paramCommand is not None:
                 subscription.command = paramCommand
-            if paramContainer is not None:
-                subscription.container = paramContainer
 
             subscription.jobName = paramJobName
+            subscription.container = paramContainer
             subscription.status = paramSubscriptionStatus
 
             session.commit()
