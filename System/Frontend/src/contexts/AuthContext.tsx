@@ -40,10 +40,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return Boolean(auth.token);
   };
 
-  const getAndCheckToken = () => {
-    checkToken();
-    return auth.token;
-  }
+  // const getAndCheckToken = () => {
+  //   checkToken();
+  //   return auth.token;
+  // }
 
   const checkToken = () => {
     if (auth.token) {
