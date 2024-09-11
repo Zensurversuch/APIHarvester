@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { availableApis } from '../services/availableApis/availableApisService';
+import { useAuth } from './AuthContext';
 
 
 export interface ApiData {
@@ -24,12 +25,13 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [apiData, setApiData] = useState<ApiData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const {getAndCheckToken} = useAuth();
 
   const fetchApiData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await availableApis();
+      const data = await availableApis(getAndCheckToken());
       setApiData(data);
     } catch (err) {
       setError('Failed to fetch API data');

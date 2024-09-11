@@ -3,6 +3,7 @@ import { Table, Form, Spinner, Alert, Button } from 'react-bootstrap';
 import { useAPI, ApiData } from '../../contexts/ApiDataContext';
 import { subscriptionData } from '../../services/subscription/subscriptionDataService';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface DataPoint {
   _measurement: string;
@@ -17,6 +18,7 @@ interface DataPoint {
 }
 
 const DisplayData: React.FC = () => {
+  const { getAndCheckToken } = useAuth();
   const { subscriptionID: subscriptionIDString, apiID: apiIDString } = useParams<{ subscriptionID: string; apiID: string }>();
   const subscriptionID = Number(subscriptionIDString);
   const apiID = Number(apiIDString);
@@ -38,7 +40,7 @@ const DisplayData: React.FC = () => {
       }
       
     try {
-      const response = await subscriptionData(subscriptionID, timespan);
+      const response = await subscriptionData(getAndCheckToken(), subscriptionID, timespan);
       setData(response);
     } catch (error) {
       if (error instanceof Error) {

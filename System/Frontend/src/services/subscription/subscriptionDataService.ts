@@ -1,13 +1,11 @@
-import { useAuth } from "../../contexts/AuthContext";
 import { INFLUX_API_BASE_URL } from "../apiConfig";
 
-export const subscriptionData = async (subscriptionID: number, timespan: number): Promise<any> => {
+export const subscriptionData = async (token: string, subscriptionID: number, timespan: number): Promise<any> => {
   try {
-    const {getAndCheckToken} = useAuth();
     const response = await fetch(`${INFLUX_API_BASE_URL}influxGetData/${subscriptionID}/${timespan}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${getAndCheckToken}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });

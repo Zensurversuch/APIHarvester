@@ -7,7 +7,7 @@ import StatusMessage from '../util/StatusMessage';
 import { useNavigate } from 'react-router-dom';
 
 const SubscriptionTable: React.FC = () => {
-  const { userID } = useAuth();
+  const { userID, getAndCheckToken } = useAuth();
   const { apiData, loading: apiLoading, error: apiError } = useAPI();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +23,7 @@ const SubscriptionTable: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchSubscriptions(userID);
+        const data = await fetchSubscriptions(getAndCheckToken(), userID);
         setSubscriptions(data);
       } catch (err) {
         setError('Failed to fetch subscriptions');
@@ -61,10 +61,10 @@ const SubscriptionTable: React.FC = () => {
   const handleSubscribe = async (subscriptionID: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await resubscribe(subscriptionID);
+      await resubscribe(getAndCheckToken(), subscriptionID);
       setStatusMessage('Resubscribeing successful!');
       setStatusType('success');
-      const data = await fetchSubscriptions(userID);
+      const data = await fetchSubscriptions(getAndCheckToken(), userID);
       setSubscriptions(data);
     } catch (error) {
       setStatusMessage('Failed to resubscribe.');
@@ -75,7 +75,7 @@ const SubscriptionTable: React.FC = () => {
   const handleUnsubscribe = async (subscriptionID: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await unsubscribe(subscriptionID)
+      await unsubscribe(getAndCheckToken(), subscriptionID)
       setStatusMessage('Unsubscribing  successful!');
       setStatusType('success');
       loadSubscriptions();

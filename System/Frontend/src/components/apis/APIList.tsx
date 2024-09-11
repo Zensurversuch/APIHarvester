@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import StatusMessage from '../util/StatusMessage';
 
 const ApiList: React.FC = () => {
-  const { userID } = useAuth();
+  const { userID, getAndCheckToken } = useAuth();
   const { apiData, loading, error } = useAPI();
   const [showModal, setShowModal] = useState(false);
   const [selectedApi, setSelectedApi] = useState<ApiData | null>(null);
@@ -55,7 +55,7 @@ const ApiList: React.FC = () => {
 
     if (selectedApi?.availableApiID !== undefined) {
       try {
-        await subscribe(userID, selectedApi.availableApiID, intervalNumber);
+        await subscribe(getAndCheckToken(), userID, selectedApi.availableApiID, intervalNumber);
         setStatusMessage('Subscription successful!');
         setStatusType('success');
       } catch (error) {
