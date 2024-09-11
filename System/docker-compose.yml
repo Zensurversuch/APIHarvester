@@ -75,6 +75,7 @@ services:
       - apikeys
     environment:
       ENV: ${ENV}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
 
 
   postgresdataconnector:
