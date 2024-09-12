@@ -1,5 +1,4 @@
 import { POSTGRES_API_BASE_URL, SCHEDULER_API_BASE_URL } from '../apiConfig';
-import { getAuthData } from '../authentication/authService';
 
 
 export interface Subscription {
@@ -12,9 +11,8 @@ export interface Subscription {
   container: string;
 }
 
-export const fetchSubscriptions = async (userID: string) => {
+export const fetchSubscriptions = async (token: string, userID: string) => {
   try {
-    const {token} = getAuthData();
     const response = await fetch(`${POSTGRES_API_BASE_URL}subscriptionsByUserID/${userID}`, {
       method: 'GET',
       headers: {
@@ -30,9 +28,8 @@ export const fetchSubscriptions = async (userID: string) => {
   }
 };
 
-export const subscribe = async (userID: string, apiID: number, interval: number): Promise<string> => {
+export const subscribe = async (token: string, userID: string, apiID: number, interval: number): Promise<string> => {
   try {
-    const {token} = getAuthData();
     const response = await fetch(`${SCHEDULER_API_BASE_URL}subscribeApi`, {
       method: 'POST',
       headers: {
@@ -56,9 +53,8 @@ export const subscribe = async (userID: string, apiID: number, interval: number)
   }
 };
 
-export const resubscribe = async (subscriptionID: number): Promise<string> => {
+export const resubscribe = async (token: string, subscriptionID: number): Promise<string> => {
   try {
-    const {token} = getAuthData();
     const response = await fetch(`${SCHEDULER_API_BASE_URL}resubscribeApi/${subscriptionID}`, {
       method: 'GET',
       headers: {
@@ -79,9 +75,8 @@ export const resubscribe = async (subscriptionID: number): Promise<string> => {
 
 
 
-export const unsubscribe = async (subscriptionID: number) => {
+export const unsubscribe = async (token: string, subscriptionID: number) => {
   try {
-    const {token} = getAuthData();
     const response = await fetch(`${SCHEDULER_API_BASE_URL}/unsubscribeApi/${subscriptionID}`, {
       method: 'GET',
       headers: {

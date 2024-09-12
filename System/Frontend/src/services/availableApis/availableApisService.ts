@@ -1,10 +1,6 @@
-//import { useAuth } from '../../contexts/AuthContext';
-import { POSTGRES_API_BASE_URL } from '../apiConfig'
-import { getAuthData } from '../authentication/authService';
- 
+import { POSTGRES_API_BASE_URL } from '../apiConfig' 
 
-export const availableApis = async () => {
-    const {token} = getAuthData();
+export const availableApis = async (token: string) => {
     const response = await fetch(POSTGRES_API_BASE_URL + 'availableApis', {
       method: 'GET',
      headers: {

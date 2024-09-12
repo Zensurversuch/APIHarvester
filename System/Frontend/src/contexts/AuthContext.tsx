@@ -9,7 +9,8 @@ interface AuthContextType {
   userID: string;
   setAuthData: (token: string, role: string, userID: string) => void;
   clearAuth: () => void;
-  isLoggedIn: () => boolean
+  isLoggedIn: () => boolean;
+  getAndCheckToken: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,10 +41,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return Boolean(auth.token);
   };
 
-  // const getAndCheckToken = () => {
-  //   checkToken();
-  //   return auth.token;
-  // }
+  const getAndCheckToken = () => {
+    checkToken();
+     return auth.token;
+   }
 
   const checkToken = () => {
     if (auth.token) {
@@ -63,7 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ ...auth, setAuthData, clearAuth, isLoggedIn }}>
+    <AuthContext.Provider value={{ ...auth, setAuthData, clearAuth, isLoggedIn, getAndCheckToken }}>
       {children}
     </AuthContext.Provider>
   );
