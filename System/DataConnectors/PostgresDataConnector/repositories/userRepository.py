@@ -17,7 +17,7 @@ class UserRepository:
                 randomID = getRandomID()
                 
             hashedPassword = hashlib.sha256(paramPassword.encode('utf-8')).hexdigest()
-            newUser = User( userID=2,
+            newUser = User( userID=randomID,
                             email=paramEmail,
                             password=hashedPassword,
                             lastName=paramLastName,

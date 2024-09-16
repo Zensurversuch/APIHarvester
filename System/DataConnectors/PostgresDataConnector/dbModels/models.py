@@ -7,7 +7,7 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'user'
 
-    userID = Column(Integer, primary_key=True, autoincrement=True)
+    userID = Column(Integer, primary_key=True, autoincrement=False)
     email = Column(String(50), nullable=False)
     password = Column(String(64), nullable=False)
     lastName = Column(String(50), nullable=False)
@@ -28,7 +28,7 @@ class User(Base):
 class Subscription(Base):
     __tablename__ = 'subscription'
 
-    subscriptionID = Column(Integer, primary_key=True, autoincrement=True)
+    subscriptionID = Column(Integer, primary_key=True, autoincrement=False)
     userID = Column(Integer, ForeignKey('user.userID'), nullable=False)
     availableApiID = Column(Integer, ForeignKey('availableApi.availableApiID'), nullable=False)
     interval = Column(Integer, nullable=False)
@@ -52,7 +52,7 @@ class Subscription(Base):
 class AvailableApi(Base):
     __tablename__ = 'availableApi'
 
-    availableApiID = Column(Integer, primary_key=True, autoincrement=True)
+    availableApiID = Column(Integer, primary_key=True, autoincrement=False)
     url = Column(String(500), nullable=False)
     name = Column(String(200), nullable=False)
     description = Column(String(200), nullable=False)
