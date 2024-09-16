@@ -85,11 +85,38 @@ const DisplayData: React.FC = () => {
     </div>
   );
 
-  // Parse the JSON strings in 'value'
-  const parsedData = data.map(point => ({
-    ...point,
-    value: JSON.parse(point.value),
-  }));
+  const parsedData = data.map(point => {
+    try {
+      const parsedValue = JSON.parse(point.value);
+  
+      // Check if 'current' exists and handle accordingly
+      if (parsedValue.current) {
+        const valueWithUnits = Object.keys(parsedValue.current).reduce<Record<string, string>>((acc, key) => {
+          const unit = parsedValue.current_units?.[key] || ''; 
+          acc[key] = `${parsedValue.current[key]}${unit}`; 
+          return acc;
+        }, {});
+  
+        return {
+          ...point,
+          value: valueWithUnits 
+        };
+      } else {
+        return {
+          ...point,
+          value: parsedValue // Use parsedValue directly if 'current' is not present
+        };
+      }
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+      return {
+        ...point,
+        value: {} // Handle parsing errors by returning an empty object
+      };
+    }
+  });
+
+  console.log(parsedData);
 
   return (
     <div>

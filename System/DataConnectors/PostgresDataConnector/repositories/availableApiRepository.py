@@ -1,5 +1,6 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
+from commonRessources.randomIDs import getRandomID
 from dbModels.models import AvailableApi
 
 class AvailableApiRepository:
@@ -60,7 +61,11 @@ class AvailableApiRepository:
     def createAvailableApi(self, paramUrl, paramName, paramDescription, paramSubscriptionType, paramRelevantFields):
         try:
             session = scoped_session(self.session_factory)
-            newAvailableApi = AvailableApi( url = paramUrl,
+            randomID = getRandomID()
+            while session.query(AvailableApi).filter(AvailableApi.availableApiID == randomID).first() is not None:
+                randomID = getRandomID()
+            newAvailableApi = AvailableApi( availableApiID=randomID,
+                                            url = paramUrl,
                                             name = paramName, 
                                             description = paramDescription,
                                             subscriptionType = paramSubscriptionType,

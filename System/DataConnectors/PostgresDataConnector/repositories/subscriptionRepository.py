@@ -1,5 +1,6 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
+from commonRessources.randomIDs import getRandomID
 from dbModels.models import Subscription
 
 class SubscriptionRepository:
@@ -59,11 +60,16 @@ class SubscriptionRepository:
     def createSubscription(self, paramUserID, paramavalableApiID, paramInterval, paramSubscriptionStatus, paramJobName):
         try:
             session = scoped_session(self.session_factory)
-            newSubscription = Subscription( userID=paramUserID,
-                                availableApiID=paramavalableApiID,
-                                interval=paramInterval, 
-                                status=paramSubscriptionStatus,
-                                jobName=paramJobName)
+            randomID = getRandomID()
+            while session.query(Subscription).filter(Subscription.subscriptionID == randomID).first() is not None:
+                randomID = getRandomID()
+                
+            newSubscription = Subscription( subscriptionID=randomID,
+                                            userID=paramUserID,
+                                            availableApiID=paramavalableApiID,
+                                            interval=paramInterval, 
+                                            status=paramSubscriptionStatus,
+                                            jobName=paramJobName)
             session.add(newSubscription)
             session.commit()
             return True, newSubscription.subscriptionID
