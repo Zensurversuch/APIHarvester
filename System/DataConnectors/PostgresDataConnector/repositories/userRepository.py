@@ -1,7 +1,7 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
+from commonRessources.randomIDs import getRandomID
 from dbModels.models import User
-from random import randint 
 import hashlib
 
 class UserRepository:
@@ -12,8 +12,13 @@ class UserRepository:
     def createUser(self, paramEmail, paramPassword, paramLastName, paramFirstName, paramRole):
         try:
             session = scoped_session(self.session_factory)
+            randomID = getRandomID()
+            while session.query(User).filter(User.userID == randomID).first() is not None:
+                randomID = getRandomID()
+                
             hashedPassword = hashlib.sha256(paramPassword.encode('utf-8')).hexdigest()
-            newUser = User( email=paramEmail,
+            newUser = User( userID=2,
+                            email=paramEmail,
                             password=hashedPassword,
                             lastName=paramLastName,
                             firstName=paramFirstName,
