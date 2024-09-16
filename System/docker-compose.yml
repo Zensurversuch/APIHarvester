@@ -47,7 +47,7 @@ services:
       MAX_NUMBER_WORKERS: ${MAX_NUMBER_WORKERS}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
     deploy:
-      replicas: 1
+      replicas: 3
 
   ofelia:
     image: mcuadros/ofelia:latest
