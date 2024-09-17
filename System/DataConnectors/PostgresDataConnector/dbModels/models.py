@@ -1,4 +1,4 @@
-from sqlalchemy import ARRAY, DateTime, Column, Integer, String, ForeignKey, Enum
+from sqlalchemy import ARRAY, DateTime, Column, Integer, String, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import declarative_base
 from commonRessources.interfaces import UserRole, SubscriptionType, SubscriptionStatus
 
@@ -55,6 +55,7 @@ class AvailableApi(Base):
     availableApiID = Column(Integer, primary_key=True, autoincrement=False)
     url = Column(String(500), nullable=False)
     name = Column(String(200), nullable=False)
+    apiTokenRequired = Column(Boolean, nullable=False)
     description = Column(String(200), nullable=False)
     subscriptionType = Column(Enum(SubscriptionType), nullable=False)
     relevantFields = Column(ARRAY(String), nullable=False)
@@ -64,6 +65,7 @@ class AvailableApi(Base):
             'availableApiID': self.availableApiID,
             'url': self.url,
             'name': self.name,
+            'apiTokenRequired': self.apiTokenRequired,
             'description': self.description,
             'subscriptionType': self.subscriptionType.name,
             'relevantFields': self.relevantFields
