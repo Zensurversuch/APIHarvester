@@ -68,7 +68,6 @@ services:
     depends_on:
       - scheduler
       - ofelia
-    command: ["sleep", "infinity"]
     deploy:
       replicas: ${MAX_NUMBER_WORKERS}
     secrets:
@@ -76,6 +75,9 @@ services:
     environment:
       ENV: ${ENV}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      HOSTNAME: ${HOSTNAME}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 
   postgresdataconnector:

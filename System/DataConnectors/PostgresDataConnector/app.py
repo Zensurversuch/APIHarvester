@@ -181,6 +181,13 @@ def createSubscription():
     else:
         return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}subscription could not be created"}), 500
 
+@app.route('/deleteSubscription/<int:subscriptionID>', methods=['DELETE'])
+@accessControlApiKey
+def deleteSubscription(subscriptionID):
+    if subscriptionRepo.deleteSubscription(subscriptionID):
+        return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.SUCCESS}subscription deleted successfully"}), 200
+    else:
+        return jsonify({API_MESSAGE_DESCRIPTOR:  f"{ApiStatusMessages.ERROR}subscription could not be deleted"}), 500
 
 # -------------------------- PostgreSQL AvailableApi Routes -------------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/availableApis', methods=['GET'])
