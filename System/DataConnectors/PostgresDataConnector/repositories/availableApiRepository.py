@@ -37,8 +37,8 @@ class AvailableApiRepository:
     def getAvailableApiByID(self, paramAvailableApiID):
         try:
             session = scoped_session(self.session_factory)
-            subscription = session.query(AvailableApi).filter(AvailableApi.availableApiID == paramAvailableApiID).first()
-            return subscription
+            availableApi = session.query(AvailableApi).filter(AvailableApi.availableApiID == paramAvailableApiID).first()
+            return availableApi
         except SQLAlchemyError as e:
             print(f"AvailableApiRepository: An error occurred while fetching availableApi with ID {paramAvailableApiID}: {e}")
             session.rollback()

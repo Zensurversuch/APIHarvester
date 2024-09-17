@@ -10,7 +10,7 @@ from commonRessources.interfaces import SubscriptionStatus
 apiKey = getenv('INTERNAL_API_KEY')
 headers = {
     'x-api-key': apiKey
-}
+    }
 from commonRessources.logger import setLoggerLevel
 
 logger = setLoggerLevel("WorkerFetchApis")
@@ -60,10 +60,22 @@ def writeToInfluxdb(apiID, subscriptionID, value, fetchTimestamp):
         logger.error(f"Error sending data to InfluxDB for API ID {apiID}: {e}")
 
 
-#python fetchApis.py fetchApi --url <url> --subscriptionID <subscriptionID> --apiId <apiId>
-def fetchApiWithToken(url, subscriptionID, apiID):
+def fetchApi(url, subscriptionID, apiID, tokenRequired):
     try:
-        response = requests.get(f"{url}&token={apiTokens['FINNHUB_KEY']}")
+        if tokenRequired == "True":
+            availableApiResponse = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}", headers=headers)
+            availableApiResponse.raise_for_status()
+            availableApiName = availableApiResponse.json().get('name').split(' ')[0].upper()
+            apiToken = apiTokens.get(availableApiName + '_KEY')
+            if availableApiName == 'FINNHUB':
+                response = requests.get(f"{url}&token={apiToken}")
+            elif availableApiName == 'ALPHAVANTAGE':
+                response = requests.get(f"{url}&apikey={apiToken}")
+            else:
+                logger.error(f"API {availableApiName} not supported")
+                logErrorToPostgres(apiID, subscriptionID, f"API {availableApiName} not supported")
+        elif tokenRequired == "False":
+            response = requests.get(url)
         response.raise_for_status()
         data = response.json()
         fetchTimestamp = datetime.now().isoformat()
@@ -72,39 +84,18 @@ def fetchApiWithToken(url, subscriptionID, apiID):
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching data for {url}: {e}")
         logErrorToPostgres(apiID, subscriptionID, str(e))
-
-
-def fetchApiWithoutToken(url, subscriptionID, apiID):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-        fetchTimestamp = datetime.now().isoformat()
-        logger.debug(f"Received data for {url}: {data}")
-        writeToInfluxdb(apiID, subscriptionID, json.dumps(data), fetchTimestamp)
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching data for {url}: {e}")
-        logErrorToPostgres(apiID, subscriptionID, str(e))
-
-
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run specific functions from the script.')
-    parser.add_argument('function', choices=['fetchApiWithToken', 'fetchApiWithoutToken'], help='Function to run')
     parser.add_argument('--url', help='the Url to fetch')
+    parser.add_argument('--tokenRequired',help='is an API token required to fetch the API')
     parser.add_argument('--subscriptionID', help='the Id of the subscription')
     parser.add_argument('--apiID', help='the Id of the API to fetch')
 
     args = parser.parse_args()
 
-    if args.function == 'fetchApiWithToken':
-        if args.url and args.subscriptionID and args.apiID:
-            fetchApiWithToken(args.url, args.subscriptionID, args.apiID)
-        else:
-            logger.error("--url & --subscriptionID & --apiID argument is required.")
-    elif args.function == 'fetchApiWithoutToken':
-        if args.url and args.subscriptionID and args.apiID:
-            fetchApiWithoutToken(args.url, args.subscriptionID, args.apiID)
-        else:
-            logger.error("--url & --subscriptionID & --apiID  argument is required.")
+    if args.url and args.tokenRequired and args.subscriptionID and args.apiID:
+        fetchApi(args.url, args.subscriptionID, args.apiID, args.tokenRequired)
+    else:
+        logger.error("--url & --tokenRequired & --subscriptionID & --apiID argument is required.")

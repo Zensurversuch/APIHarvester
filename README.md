@@ -3,6 +3,42 @@
 ## Short Description
 API Harvester allows periodic collection and visualization of data from pre-configured API endpoints. New APIs can be easily added to expand the platform.
 
+## Deployment
+### Starting the application
+Requirements:
+Python installed (https://www.python.org/downloads/)
+Docker installed (https://docs.docker.com/get-docker/)
+
+Procedure (the deployment process is completed with a single command):
+
+1. Download the repository
+2. Create the needed `.env` file as described [here](#setup-environment)
+3. Create the needed `apikeys.txt` file as described [here](#api-keys-secrets)
+4. Navigate to the folder (/System)
+5. Open the console and execute the following command:
+```bash
+docker-compose up --build
+```
+
+### Restarting the complete application with deleting all the data
+1. Open the console and execute the following command or press *CTRL+C*:
+```bash
+docker-compose down
+```
+2. Open Docker Desktop and delete the compose environment under Containers  
+   Alternatively, this can be done via the command line. Open the console and run:
+   ```bash
+   docker-compose rm -f
+   ```
+3. Use Docker Desktop in order to delete the API-Harvester related volumes under Volumes.  
+   You can also achieve this using the console with the following command:
+   ```bash
+   docker volume rm $(docker volume ls -q)
+   ```
+4. Delete the entries in the config.ini file which is located under [System\Scheduler\\.config\config.ini](System/Scheduler/.config/config.ini)  
+   (This has to be done because the entries in this file are related to the database subscription entries. The casual behaviour is that both entries are deleted through the frontend)
+
+
 ## Setup environment
 ### .env file
 

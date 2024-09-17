@@ -68,6 +68,7 @@ def initializePostgres():
                 availableApiID=1,
                 url="https://finnhub.io/api/v1/quote?symbol=AAPL",
                 name="Finnhub Apple",
+                apiTokenRequired=True,
                 description="This Api returns the current Apple stock price via Finnhub",
                 subscriptionType=SubscriptionType.FREE,
                 relevantFields=["c", "d", "dp", "h", "l", "o", "pc", "t"]
@@ -77,6 +78,7 @@ def initializePostgres():
                 availableApiID=2,
                 url="https://finnhub.io/api/v1/quote?symbol=IBM",
                 name="Finnhub IBM",
+                apiTokenRequired=True,
                 description="This Api returns the current IBM stock price via Finnhub",
                 subscriptionType=SubscriptionType.FREE,
                 relevantFields=["c", "d", "dp", "h", "l", "o", "pc", "t"]
@@ -86,14 +88,26 @@ def initializePostgres():
                 availableApiID=3,
                 url="https://api.open-meteo.com/v1/forecast?latitude=48.6767637&longitude=10.152923&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,cloud_cover,wind_speed_10m",
                 name="Weather Heidenheim",
+                apiTokenRequired=False,
                 description="This Api returns the current relevant weather data for heidenheim",
                 subscriptionType=SubscriptionType.FREE,
                 relevantFields=["temperature_2m", "relative_humidity_2m", "dew_point_2m", "apparent_temperature", "precipitation_probability", "precipitation", "rain", "cloud_cover", "wind_speed_10m"]
             )
 
+            availableApi4 = AvailableApi(
+                availableApiID=4,
+                url="https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=IBM",
+                name="AlphaVantage IBM",
+                apiTokenRequired=True,
+                description="This Api returns the current IBM stock price via AlphaVantage",
+                subscriptionType=SubscriptionType.FREE,
+                relevantFields=["01. symbol", "02. open", "03. high", "04. low", "05. price", "06. volume", "07. latest trading day", "08. previous close", "09. change", "10. change percent"]
+            )
+
             session.add(availableApi1)
             session.add(availableApi2)
             session.add(availableApi3)
+            session.add(availableApi4)
             session.commit()
             print("APIs created and added to the database.")
         print("Database initialized.")
