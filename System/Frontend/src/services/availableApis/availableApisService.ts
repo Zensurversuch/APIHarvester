@@ -1,5 +1,6 @@
 import { POSTGRES_API_BASE_URL } from '../apiConfig' 
 
+// Fetch availableApis endpoint
 export const availableApis = async (token: string) => {
     const response = await fetch(POSTGRES_API_BASE_URL + 'availableApis', {
       method: 'GET',

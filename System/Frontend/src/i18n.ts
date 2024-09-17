@@ -1,6 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+// Keys and translations for visable Textes. To support potentially multiple languages and that the same texts are standardized
+// Work im Prozess only some textes are alredy linked with key translations 
 const resources = {
   en: {
     translation: {

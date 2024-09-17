@@ -5,6 +5,7 @@ import { login } from '../../services/authentication/loginService';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+
 const Login: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -15,7 +16,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-
+// show a message if the register site or the jwt checkt throws one
   useEffect(() => {
     if (location.state && location.state.message) {
       setMessage(location.state.message);
@@ -23,6 +24,7 @@ const Login: React.FC = () => {
     }
   }, [location.state]);
 
+  // navigate user to home by succesfull login
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
@@ -30,7 +32,6 @@ const Login: React.FC = () => {
 
       // Save the result in the AuthContext
       setAuthData(result.access_token, result.role, result.userID);
-      //
       navigate('/');
 
     } catch {

@@ -1,5 +1,6 @@
 import { POSTGRES_API_BASE_URL } from '../apiConfig'
 
+// Fetch register endpoint
 export const register = async (data: { email: string; password: string, lastName: string, firstName: string, role: string }) => {
 
     const response = await fetch(POSTGRES_API_BASE_URL + 'createUser', {

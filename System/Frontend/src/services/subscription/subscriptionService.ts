@@ -11,6 +11,7 @@ export interface Subscription {
   container: string;
 }
 
+// Fetch subscriptionsByUserID endpoint
 export const fetchSubscriptions = async (token: string, userID: string) => {
   try {
     const response = await fetch(`${POSTGRES_API_BASE_URL}subscriptionsByUserID/${userID}`, {
@@ -28,6 +29,7 @@ export const fetchSubscriptions = async (token: string, userID: string) => {
   }
 };
 
+// Fetch subscribeApi endpoint
 export const subscribe = async (token: string, userID: string, apiID: number, interval: number): Promise<string> => {
   try {
     const response = await fetch(`${SCHEDULER_API_BASE_URL}subscribeApi`, {
@@ -53,6 +55,7 @@ export const subscribe = async (token: string, userID: string, apiID: number, in
   }
 };
 
+// Fetch resubscribeApi endpoint
 export const resubscribe = async (token: string, subscriptionID: number): Promise<string> => {
   try {
     const response = await fetch(`${SCHEDULER_API_BASE_URL}resubscribeApi/${subscriptionID}`, {
@@ -74,7 +77,7 @@ export const resubscribe = async (token: string, subscriptionID: number): Promis
 };
 
 
-
+// Fetch unsubscribeApi endpoint
 export const unsubscribe = async (token: string, subscriptionID: number) => {
   try {
     const response = await fetch(`${SCHEDULER_API_BASE_URL}/unsubscribeApi/${subscriptionID}`, {

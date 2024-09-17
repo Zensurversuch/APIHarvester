@@ -1,5 +1,6 @@
 import { INFLUX_API_BASE_URL } from "../apiConfig";
 
+// Fetch subscriptionData endpoint
 export const subscriptionData = async (token: string, subscriptionID: number, timespan: number): Promise<any> => {
   try {
     const response = await fetch(`${INFLUX_API_BASE_URL}influxGetData/${subscriptionID}/${timespan}`, {

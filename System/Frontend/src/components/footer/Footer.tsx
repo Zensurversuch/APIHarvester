@@ -6,6 +6,7 @@ const Footer: React.FC = () => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear(); 
 
+  // show footer
   return (
     <footer className="bg-dark text-white mt-5 p-4 text-center">
       <Container>

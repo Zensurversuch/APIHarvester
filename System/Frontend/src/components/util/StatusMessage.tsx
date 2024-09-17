@@ -7,7 +7,7 @@ interface StatusMessageProps {
   duration?: number;
   onClose: () => void;
 }
-
+// Generic status message for the wohle application 
 const StatusMessage: React.FC<StatusMessageProps> = ({
   message,
   type,

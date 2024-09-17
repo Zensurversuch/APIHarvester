@@ -6,6 +6,7 @@ interface PrivateRouteProps {
   children: React.ReactNode;
 }
 
+// Protect Routes only logged in user can access this routes
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { isLoggedIn } = useAuth();
 

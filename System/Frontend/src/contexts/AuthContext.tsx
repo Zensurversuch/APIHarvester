@@ -13,6 +13,7 @@ interface AuthContextType {
   getAndCheckToken: () => string;
 }
 
+// Store Auth Data and make it accessable for the whole frontend
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -25,27 +26,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   
-
+  // Save JWT, role and userID to localStorage
   const setAuthData = (token: string, role: string, userID: string ) => {
     setAuth({ token, role, userID });
     saveAuthData(token, role, userID); // Save to localStorage
   };
 
+   // Clear data from localStorage
   const clearAuth = () => {
     setAuth({ token: '', role: '', userID: '' });
-    clearAuthData(); // Clear from localStorage
+    clearAuthData();
   };
 
+  // Check if User is logged in
   const isLoggedIn = () => {
     checkToken() 
     return Boolean(auth.token);
   };
 
+  
+  // Check JWT token and return it
   const getAndCheckToken = () => {
     checkToken();
      return auth.token;
    }
 
+  // Check if JWT token is valid an not expired. If expired logout user 
   const checkToken = () => {
     if (auth.token) {
       try {

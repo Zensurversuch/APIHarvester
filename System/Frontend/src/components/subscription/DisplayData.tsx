@@ -30,8 +30,10 @@ const DisplayData: React.FC = () => {
   const [timespanError, setTimespanError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  // get API data
   const selectedApi = apiData.find((api: ApiData) => api.availableApiID === apiID);
 
+  // fetch subscription Data
   const fetchData = async () => {
     if (!selectedApi) {
         setError('API not found');
@@ -59,6 +61,7 @@ const DisplayData: React.FC = () => {
       }
     }, [selectedApi, timespan, subscriptionID, apiLoading]);
 
+  // check if time timespan is in range and set timespan  
   const handleTimespanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     if (value < 1) {
@@ -85,6 +88,7 @@ const DisplayData: React.FC = () => {
     </div>
   );
 
+  // Convert API fetch data displayable
   const parsedData = data.map(point => {
     try {
       const parsedValue = JSON.parse(point.value);
@@ -115,8 +119,6 @@ const DisplayData: React.FC = () => {
       };
     }
   });
-
-  console.log(parsedData);
 
   return (
     <div>

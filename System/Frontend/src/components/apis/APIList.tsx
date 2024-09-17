@@ -17,11 +17,13 @@ const ApiList: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'failure'>('success');
 
+  // opens subscriptions modal after API selction click
   const handleSubscribeClick = (api: ApiData) => {
     setSelectedApi(api);
     setShowModal(true);
   };
 
+  // close Modal an reset default settings
   const handleClose = () => {
     setShowModal(false);
     setInterval('60');
@@ -29,6 +31,7 @@ const ApiList: React.FC = () => {
     setInputError('');
   };
 
+  // Subscribe api and check if a valid interval is selected and give user feedback if subscription is sussesfull/unsussesfull
   const handleSubscribe = async () => {
     const maxInt32 = 2147483647;
     let intervalNumber: number;
@@ -74,7 +77,7 @@ const ApiList: React.FC = () => {
     handleClose();
   };
 
-  // Ensure your component returns a valid ReactNode
+  // ensure component returns a valid ReactNode and loadings screen while fetching data 
   if (loading) {
     return (
       <Container className="text-center mt-5">
@@ -85,6 +88,7 @@ const ApiList: React.FC = () => {
     );
   }
 
+  // show errow if API data failed to fetched
   if (error) {
     return (
       <Container className="text-center mt-5">
@@ -122,6 +126,7 @@ const ApiList: React.FC = () => {
         ))}
       </Row>
 
+      {/* Render the status message component if there is a statusMessage */}
       {statusMessage && (
         <StatusMessage 
           message={statusMessage}

@@ -1,9 +1,11 @@
+// Safe AuthData to the Browser
 export const saveAuthData = (token: string, role: string, userID: string ) => {
     localStorage.setItem('jwt', token);
     localStorage.setItem('userRole', role);
     localStorage.setItem('userID', userID);
   };
   
+  // Load AuthData from Browser
   export const getAuthData = () => {
     return {
       token: localStorage.getItem('jwt') || '',
@@ -12,6 +14,7 @@ export const saveAuthData = (token: string, role: string, userID: string ) => {
     };
   };
   
+  // Delete AuthData to the Browser
   export const clearAuthData = () => {
     localStorage.removeItem('jwt');
     localStorage.removeItem('userRole');
