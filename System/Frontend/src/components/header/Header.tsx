@@ -7,6 +7,7 @@ const Header: React.FC = () => {
   const { t } = useTranslation();
   const { isLoggedIn, clearAuth } = useAuth();
 
+  // clear all stored user data after logout
   const handleLogout = () => {
     clearAuth(); // Clear authentication data
   };

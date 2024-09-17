@@ -19,6 +19,7 @@ interface APIContextType {
   refreshApiData: () => void;
 }
 
+// Context are used in order to access data within the complete frontend application
 const APIContext = createContext<APIContextType | undefined>(undefined);
 
 export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -27,6 +28,7 @@ export const APIProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [error, setError] = useState<string | null>(null);
   const {getAndCheckToken} = useAuth();
 
+  // Fetch and store API Data
   const fetchApiData = async () => {
     setLoading(true);
     setError(null);

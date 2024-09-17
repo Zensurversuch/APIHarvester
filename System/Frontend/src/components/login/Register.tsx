@@ -15,6 +15,7 @@ const Register: React.FC = () => {
   const role = "USER" // Placeholder if the System have multiple Roles
   const [error, setError] = useState<string | null>(null);
 
+  // rules for a strong password
   const validatePassword = (password: string) => {
     const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
@@ -31,6 +32,7 @@ const Register: React.FC = () => {
     );
   };
 
+  // navigate user to login if the registration was successfull otherwise throw an error message
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validatePassword(password)) {

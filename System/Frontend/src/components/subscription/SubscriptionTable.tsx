@@ -18,6 +18,7 @@ const SubscriptionTable: React.FC = () => {
   const [statusType, setStatusType] = useState<'success' | 'failure'>('success');
   const navigate = useNavigate();
 
+  // load Subscription from backend
   const loadSubscriptions = async () => {
     if (userID) {
       setLoading(true);
@@ -43,21 +44,25 @@ const SubscriptionTable: React.FC = () => {
     api: apiData.find(api => api.availableApiID === sub.availableApiID)
   }));
 
+  // opens the API details modal and not the fetch data site
   const handleApiNameClick = (api: ApiData, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedApi(api);
     setShowModal(true);
   };
 
+  // close the API details modal
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedApi(null);
   };
 
+  // Navigate to the DisplayData page by table Row click
   const handleRowClick = (subscriptionID: number, apiID: number) => {
-    navigate(`/subscriptionData/${subscriptionID}/${apiID}`); // Navigate to the DisplayData page
+    navigate(`/subscriptionData/${subscriptionID}/${apiID}`); 
   };
 
+  // Resubscribe an inactive API subscription
   const handleSubscribe = async (subscriptionID: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -72,6 +77,7 @@ const SubscriptionTable: React.FC = () => {
     }
   };
 
+    // Unsubscribe an active API subscription
   const handleUnsubscribe = async (subscriptionID: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {

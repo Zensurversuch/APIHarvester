@@ -14,6 +14,7 @@ import SubscriptionTable from './components/subscription/SubscriptionTable';
 import ApiList from './components/apis/APIList';
 import DisplayData from './components/subscription/DisplayData';
 
+// Main strucure of the Frontend
 function App() {
   return (
     <Router>

@@ -30,8 +30,27 @@ const DisplayData: React.FC = () => {
   const [timespanError, setTimespanError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  // get API data
   const selectedApi = apiData.find((api: ApiData) => api.availableApiID === apiID);
+  const relevantFields = new Set(selectedApi?.relevantFields || []);
 
+  // get all relevant fields data from dataObject even if they are encapsulated
+  function extractRelevantFields(dataObject: any): Record<string, any> {
+    let result: Record<string, any> = {};
+
+    for (const key in dataObject) {
+      if (relevantFields.has(key)) {
+        result[key] = dataObject[key];
+      } else if (typeof dataObject[key] === 'object' && dataObject[key] !== null) {
+        const nestedResult = extractRelevantFields(dataObject[key]);
+        Object.assign(result, nestedResult);
+      }
+    }
+
+    return result;
+  }
+
+  // fetch subscription Data
   const fetchData = async () => {
     if (!selectedApi) {
         setError('API not found');
@@ -59,6 +78,7 @@ const DisplayData: React.FC = () => {
       }
     }, [selectedApi, timespan, subscriptionID, apiLoading]);
 
+  // check if the selected timespan is in range and set timespan  
   const handleTimespanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     if (value < 1) {
@@ -85,10 +105,11 @@ const DisplayData: React.FC = () => {
     </div>
   );
 
+  // Convert the fetched API data in order to show them in the right format
   const parsedData = data.map(point => {
     try {
       const parsedValue = JSON.parse(point.value);
-  
+
       // Check if 'current' exists and handle accordingly
       if (parsedValue.current) {
         const valueWithUnits = Object.keys(parsedValue.current).reduce<Record<string, string>>((acc, key) => {
@@ -102,9 +123,10 @@ const DisplayData: React.FC = () => {
           value: valueWithUnits 
         };
       } else {
+        const relevantData = extractRelevantFields(parsedValue);
         return {
           ...point,
-          value: parsedValue // Use parsedValue directly if 'current' is not present
+          value: relevantData
         };
       }
     } catch (error) {
@@ -115,8 +137,6 @@ const DisplayData: React.FC = () => {
       };
     }
   });
-
-  console.log(parsedData);
 
   return (
     <div>
