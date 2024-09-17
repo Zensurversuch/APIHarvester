@@ -102,7 +102,7 @@ def extractSubscriptionID(command):
 def balanceJobsAcrossWorkers():
     """
     Balances the jobs across the worker containers.
-    This is done if a Subscribtion is desubscribed or a worker container is not working (detected by not sending a heartbeat anymore).
+    This is done if a Subscribtion is unsubscribed or a worker container is not working (detected by not sending a heartbeat anymore).
     
     1) Counts the number of jobs per worker in the ofelia config file
     2) Delete all the entries in the config file

@@ -7,8 +7,9 @@ from commonRessources.logger import setLoggerLevel
 
 # -------------------------- Environment Variables ------------------------------------------------------------------------------------------------------------------------------------------
 CONFIG_FILE = '/app/opheliaConfig/config.ini'
-activeJobCounterName = 'ACTIVE_JOB_COUNTER'
-historicalJobCounterName = 'HISTORICAL_JOB_COUNTER'
+activeJobCounterName = 'ACTIVE_JOB_COUNTER'         # The active job counter is the number of jobs that are currently being executed.
+historicalJobCounterName = 'HISTORICAL_JOB_COUNTER' # The historical job counter is the number of jobs that have been executed since the start of the system.
+                                                    # This is needed in order to assign unique job IDs to each job.
 
 # --------------------------- Initializations -----------------------------------------------------------------------------------------------------------------------------------------
 logger = setLoggerLevel("RedisJobCounter")
@@ -78,16 +79,11 @@ def updateHistoricalJobCounter():
 def getActiveJobCounter():
     """
     Returns the current active job counter from Redis.
-
-    The active job counter is the number of jobs that are currently being executed.
     """
     return redisClient.get(activeJobCounterName)
 
 def getHistoricalJobCounter():
     """
     Returns the current historical job counter from Redis.
-
-    The historical job counter is the number of jobs that have been executed since the start of the system.
-    This is needed in order to assign unique job IDs to each job.
     """
     return redisClient.get(historicalJobCounterName)

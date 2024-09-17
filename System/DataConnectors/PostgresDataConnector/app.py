@@ -157,7 +157,7 @@ def setSubscriptionsStatus():
         "subscriptionID": <int>,            # The ID of the subscription to update
         "subscriptionStatus": <str>,        # The new status of the subscription
         "jobName": <str>,                   # The name of the job
-        "command": <str (optional)>,                   # The command to execute
+        "command": <str (optional)>,        # The command to execute
         "container": <str>                  # The container to use
     }
     """
