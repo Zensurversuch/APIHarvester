@@ -62,11 +62,11 @@ def writeToInfluxdb(apiID, subscriptionID, value, fetchTimestamp):
 
 def fetchApi(url, subscriptionID, apiID, tokenRequired):
     try:
-        if tokenRequired:
+        if tokenRequired == "True":
             availableApiResponse = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}", headers=headers)
             availableApiResponse.raise_for_status()
             availableApiName = availableApiResponse.json().get('name').split(' ')[0].upper()
-            apiToken = apiTokens[availableApiName + '_KEY']
+            apiToken = apiTokens.get(availableApiName + '_KEY')
             if availableApiName == 'FINNHUB':
                 response = requests.get(f"{url}&token={apiToken}")
             elif availableApiName == 'ALPHAVANTAGE':
@@ -74,7 +74,7 @@ def fetchApi(url, subscriptionID, apiID, tokenRequired):
             else:
                 logger.error(f"API {availableApiName} not supported")
                 logErrorToPostgres(apiID, subscriptionID, f"API {availableApiName} not supported")
-        else:
+        elif tokenRequired == "False":
             response = requests.get(url)
         response.raise_for_status()
         data = response.json()
@@ -89,7 +89,7 @@ def fetchApi(url, subscriptionID, apiID, tokenRequired):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run specific functions from the script.')
     parser.add_argument('--url', help='the Url to fetch')
-    parser.add_argument('--tokenRequired', help='is an API token required to fetch the API')
+    parser.add_argument('--tokenRequired',help='is an API token required to fetch the API')
     parser.add_argument('--subscriptionID', help='the Id of the subscription')
     parser.add_argument('--apiID', help='the Id of the API to fetch')
 
