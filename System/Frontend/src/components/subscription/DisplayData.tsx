@@ -32,6 +32,23 @@ const DisplayData: React.FC = () => {
   const navigate = useNavigate();
   // get API data
   const selectedApi = apiData.find((api: ApiData) => api.availableApiID === apiID);
+  const relevantFields = new Set(selectedApi?.relevantFields || []);
+
+  // get all relevant fields data from dataObject even if they are encapsulated
+  function extractRelevantFields(dataObject: any): Record<string, any> {
+    let result: Record<string, any> = {};
+
+    for (const key in dataObject) {
+      if (relevantFields.has(key)) {
+        result[key] = dataObject[key];
+      } else if (typeof dataObject[key] === 'object' && dataObject[key] !== null) {
+        const nestedResult = extractRelevantFields(dataObject[key]);
+        Object.assign(result, nestedResult);
+      }
+    }
+
+    return result;
+  }
 
   // fetch subscription Data
   const fetchData = async () => {
@@ -92,7 +109,7 @@ const DisplayData: React.FC = () => {
   const parsedData = data.map(point => {
     try {
       const parsedValue = JSON.parse(point.value);
-  
+
       // Check if 'current' exists and handle accordingly
       if (parsedValue.current) {
         const valueWithUnits = Object.keys(parsedValue.current).reduce<Record<string, string>>((acc, key) => {
@@ -106,9 +123,10 @@ const DisplayData: React.FC = () => {
           value: valueWithUnits 
         };
       } else {
+        const relevantData = extractRelevantFields(parsedValue);
         return {
           ...point,
-          value: parsedValue // Use parsedValue directly if 'current' is not present
+          value: relevantData
         };
       }
     } catch (error) {
