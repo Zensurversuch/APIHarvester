@@ -1,6 +1,7 @@
 from enum import Enum
 
-class UserRole(Enum):
+class UserRole(Enum):       # different User Roles (Premium User not used at the moment)
+                            # idea is that Users can only subscribe free API's, Admins can subscribe premium API's too
     USER = "USER"
     ADMIN = "ADMIN"
     PREMIUM_USER = "PREMIUM_USER"
@@ -8,14 +9,15 @@ class UserRole(Enum):
     def __str__(self):
         return self.name
 
-class SubscriptionType(Enum):
+class SubscriptionType(Enum):       # possible Subscription Types (at the moment not used)
+                                    # idea is that some subscriptions can be subscribed for free, some are premium
     FREE = "FREE"
     PREMIUM = "PREMIUM"
 
     def __str__(self):
         return self.name
 
-class ApiStatusMessages(Enum):
+class ApiStatusMessages(Enum):      # status Messages the internal API's (Scheduler, Dataconnectors) return
     SUCCESS = "SUCCESS: "
     WARNING = "WARNING: "
     ERROR = "ERROR: "
@@ -23,7 +25,7 @@ class ApiStatusMessages(Enum):
     def __str__(self):
         return self.value
 
-class SubscriptionStatus(Enum):
+class SubscriptionStatus(Enum):     # possible Statuses a Subscription can have
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
     ERROR = "ERROR"

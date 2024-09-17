@@ -6,13 +6,15 @@ from datetime import datetime, timezone
 import json
 from commonRessources import COMPOSE_INFLUX_DATA_CONNECTOR_URL, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 from commonRessources.interfaces import SubscriptionStatus
+from commonRessources.logger import setLoggerLevel
 
+# -------------------------- Environment Variables ------------------------------------------------------------------------------------------------------------------------------------------
 apiKey = getenv('INTERNAL_API_KEY')
 headers = {
     'x-api-key': apiKey
     }
-from commonRessources.logger import setLoggerLevel
 
+# --------------------------- Initializations -----------------------------------------------------------------------------------------------------------------------------------------
 logger = setLoggerLevel("WorkerFetchApis")
 
 def loadApiTokens(file_path):
@@ -27,10 +29,17 @@ def loadApiTokens(file_path):
     except Exception as e:
         logger.error(f"Error reading secrets file: {e}")
     return api_tokens
-
 apiTokens = loadApiTokens('/run/secrets/apikeys')
 
+# --------------------------- Functions -----------------------------------------------------------------------------------------------------------------------------------------
 def logErrorToPostgres(apiID, subscriptionID, error_message):
+    """
+    If an error occurs during fetching data from an API, the error message is logged to the PostgreSQL database.
+
+    :param apiID: The ID of the API
+    :param subscriptionID: The ID of the subscription
+    :param error_message: The error message
+    """
     try:
         response = requests.post(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus",
             json={
@@ -45,6 +54,14 @@ def logErrorToPostgres(apiID, subscriptionID, error_message):
 
 
 def writeToInfluxdb(apiID, subscriptionID, value, fetchTimestamp):
+    """
+    Writes the fetched data to InfluxDB.
+
+    :param apiID: The ID of the API
+    :param subscriptionID: The ID of the subscription
+    :param value: The fetched data
+    :param fetchTimestamp: The timestamp of the fetch
+    """
     try:
         influx_url = f"{COMPOSE_INFLUX_DATA_CONNECTOR_URL}/influxWriteData/{apiID}"
         now = datetime.now(timezone.utc)
@@ -61,13 +78,21 @@ def writeToInfluxdb(apiID, subscriptionID, value, fetchTimestamp):
 
 
 def fetchApi(url, subscriptionID, apiID, tokenRequired):
+    """
+    Fetches the subscribed data from an API and loads it to InfluxDB.
+
+    :param url: The URL to fetch
+    :param subscriptionID: The ID of the subscription
+    :param apiID: The ID of the API
+    :param tokenRequired: If an API token is required to fetch the data
+    """
     try:
         if tokenRequired == "True":
             availableApiResponse = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}", headers=headers)
             availableApiResponse.raise_for_status()
-            availableApiName = availableApiResponse.json().get('name').split(' ')[0].upper()
+            availableApiName = availableApiResponse.json().get('name').split(' ')[0].upper()    # Get the name of the API in order to get the correct API token
             apiToken = apiTokens.get(availableApiName + '_KEY')
-            if availableApiName == 'FINNHUB':
+            if availableApiName == 'FINNHUB':                       # Different APIs require different query parameters in order to pass the API token
                 response = requests.get(f"{url}&token={apiToken}")
             elif availableApiName == 'ALPHAVANTAGE':
                 response = requests.get(f"{url}&apikey={apiToken}")

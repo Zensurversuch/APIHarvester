@@ -16,12 +16,17 @@ class User(Base):
     lastLogin = Column(DateTime, nullable=True)
 
     def toDict(self):
+        """
+        Converts the User instance to a dictionary representation.
+
+        :return: Dictionary containing user details
+        """
         return {
             'userID': self.userID,
             'email': self.email,
             'lastName': self.lastName,
             'firstName': self.firstName,
-            'role': self.role.name,  
+            'role': self.role.name,
             'lastLogin': self.lastLogin.isoformat() if self.lastLogin else None
         }
 
@@ -38,6 +43,11 @@ class Subscription(Base):
     container = Column(String(64), nullable=True)
 
     def toDict(self):
+        """
+        Converts the Subscription instance to a dictionary representation.
+
+        :return: Dictionary containing subscription details
+        """
         return {
             'subscriptionID': self.subscriptionID,
             'userID': self.userID,
@@ -61,6 +71,11 @@ class AvailableApi(Base):
     relevantFields = Column(ARRAY(String), nullable=False)
 
     def toDict(self):
+        """
+        Converts the AvailableApi instance to a dictionary representation.
+
+        :return: Dictionary containing available API details
+        """
         return {
             'availableApiID': self.availableApiID,
             'url': self.url,

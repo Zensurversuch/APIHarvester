@@ -5,22 +5,22 @@ from commonRessources import REDIS_HOST, REDIS_PORT
 import configparser
 from commonRessources.logger import setLoggerLevel
 
+# -------------------------- Environment Variables ------------------------------------------------------------------------------------------------------------------------------------------
 CONFIG_FILE = '/app/opheliaConfig/config.ini'
-
-logger = setLoggerLevel("RedisJobCounter")
-
-
-redisClient = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
-
 activeJobCounterName = 'ACTIVE_JOB_COUNTER'
 historicalJobCounterName = 'HISTORICAL_JOB_COUNTER'
+
+# --------------------------- Initializations -----------------------------------------------------------------------------------------------------------------------------------------
+logger = setLoggerLevel("RedisJobCounter")
+
+redisClient = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 def initializeActiveJobCounter():
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE)
-    
+
     activeJobCounter = sum(1 for section in config.sections() if section.startswith('job-exec "'))
-    
+
     try:
         logger.info(f"Active Job Counter initialized to {activeJobCounter}")
         redisClient.set(activeJobCounterName, activeJobCounter)
@@ -50,7 +50,12 @@ def initializeHistoricalJobCounter():
         logger.error(f"Error accessing Redis during initializing the {historicalJobCounterName}: {e}")
 initializeHistoricalJobCounter()
 
+# --------------------------- Job Counter Functions -----------------------------------------------------------------------------------------------------------------------------------------
 def updateActiveJobCounter(increment: bool):
+    """
+    Updates the active job counter in Redis.
+    :param increment: True if the counter should be incremented, False if it should be decremented
+    """
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE)
 
@@ -64,11 +69,25 @@ def updateActiveJobCounter(increment: bool):
         logger.error(f"Error updating Redis counter: {e}")
 
 def updateHistoricalJobCounter():
+    """
+    Updates the historical job counter in Redis.
+    """
     redisClient.incr(historicalJobCounterName)
     logger.info(f"Historical Job Counter updated to {redisClient.get(historicalJobCounterName)}")
 
 def getActiveJobCounter():
+    """
+    Returns the current active job counter from Redis.
+
+    The active job counter is the number of jobs that are currently being executed.
+    """
     return redisClient.get(activeJobCounterName)
 
 def getHistoricalJobCounter():
+    """
+    Returns the current historical job counter from Redis.
+
+    The historical job counter is the number of jobs that have been executed since the start of the system.
+    This is needed in order to assign unique job IDs to each job.
+    """
     return redisClient.get(historicalJobCounterName)

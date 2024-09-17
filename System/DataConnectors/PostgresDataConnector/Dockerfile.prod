@@ -1,3 +1,5 @@
+# PostgresDataConnector Production Dockerfile
+# Uses gunicorn as the WSGI server.
 FROM python:3.8
 
 WORKDIR /app
