@@ -63,7 +63,17 @@ def writeToInfluxdb(apiID, subscriptionID, value, fetchTimestamp):
 def fetchApi(url, subscriptionID, apiID, tokenRequired):
     try:
         if tokenRequired:
-            response = requests.get(f"{url}&token={apiTokens['FINNHUB_KEY']}")
+            availableApiResponse = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/availableApi/{apiID}", headers=headers)
+            availableApiResponse.raise_for_status()
+            availableApiName = availableApiResponse.json().get('name').split(' ')[0].upper()
+            apiToken = apiTokens[availableApiName + '_KEY']
+            if availableApiName == 'FINNHUB':
+                response = requests.get(f"{url}&token={apiToken}")
+            elif availableApiName == 'ALPHAVANTAGE':
+                response = requests.get(f"{url}&apikey={apiToken}")
+            else:
+                logger.error(f"API {availableApiName} not supported")
+                logErrorToPostgres(apiID, subscriptionID, f"API {availableApiName} not supported")
         else:
             response = requests.get(url)
         response.raise_for_status()

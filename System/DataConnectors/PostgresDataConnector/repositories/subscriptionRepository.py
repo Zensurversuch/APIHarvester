@@ -74,24 +74,6 @@ class SubscriptionRepository:
         finally:
             session.close()
 
-    def deleteSubscription(self, paramSubscriptionID):
-        try:
-            session = scoped_session(self.session_factory)
-            subscription = session.query(Subscription).filter(Subscription.subscriptionID == paramSubscriptionID).first()
-            if subscription is None:
-                print(f"SubscriptionRepository: No subscription found with ID {paramSubscriptionID}")
-                return False
-
-            session.delete(subscription)
-            session.commit()
-            return True
-        except SQLAlchemyError as e:
-            print(f"SubscriptionRepository: An error occurred while deleting the subscription with ID {paramSubscriptionID}: {e}")
-            session.rollback()
-            return False
-        finally:
-            session.close()
-
     def setSubsriptionStatus(self, paramSubscriptionID, paramSubscriptionStatus, paramJobName, paramCommand, paramContainer):
         try:
             session = scoped_session(self.session_factory)

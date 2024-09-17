@@ -22,7 +22,6 @@ headers = {
 
 def sendHeartbeat(workerID):
     """Send a heartbeat to the scheduler to signal that the worker is alive."""
-    print("Sending heartbeat for worker", workerID)
     try:
         heartbeat_url = f"{COMPOSE_SCHEDULER_API_URL}/heartbeatWorkers"
         data = {
@@ -52,11 +51,10 @@ def get_container_name():
             text=True,
             check=True
         )
-        logger.error(f"Container name: {result.stdout.strip()}")
         container_name = result.stdout.strip()
         return container_name
     except subprocess.CalledProcessError as e:
-        print(f"Fehler beim Ausführen des Docker-Befehls: {e}")
+        logger.error(f"Failed to get container name: {e}")
         return None
 
 if __name__ == "__main__":

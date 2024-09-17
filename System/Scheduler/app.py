@@ -73,6 +73,12 @@ def subscribeApi():
         while not lockConfigFile.acquireLock():  # If the config file is locked, wait
             time.sleep(0.5)
 
+        containerName = scale.scaleWorkers()
+
+        if not containerName:
+            lockConfigFile.releaseLock()
+            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}No worker container available"}), 400
+
         # Create subscription
         subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/createSubscription', 
                                              json={
@@ -95,11 +101,6 @@ def subscribeApi():
         jobName = f"job{jobCounter.getHistoricalJobCounter()}"
         containerName = scale.scaleWorkers()
 
-        if not containerName:
-            lockConfigFile.releaseLock()
-            deleteSubscriptionResponse = requests.delete(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/deleteSubscription/{subscriptionID}', headers=headers)
-            deleteSubscriptionResponse.raise_for_status()
-            return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}No worker container available"}), 400
 
         #set the jobName, command and container in the subscription
         subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', 
@@ -132,6 +133,11 @@ def resubscribeApi(subscriptionID):
                 time.sleep(0.5)
             jobName = f"job{jobCounter.getHistoricalJobCounter()}"
             containerName = scale.scaleWorkers()
+
+            if not containerName:
+                lockConfigFile.releaseLock()
+                return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}No worker container available"}), 400
+
             manageJobs.addJob(jobName, str(data.get('interval')), str(data.get('command')), containerName)
             lockConfigFile.releaseLock()
 

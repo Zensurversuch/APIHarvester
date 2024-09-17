@@ -96,7 +96,7 @@ def initializePostgres():
 
             availableApi4 = AvailableApi(
                 availableApiID=4,
-                url="https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=IBM&apikey=K0Y9567NSKUDV80Q",
+                url="https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=IBM",
                 name="AlphaVantage IBM",
                 apiTokenRequired=True,
                 description="This Api returns the current IBM stock price via AlphaVantage",
