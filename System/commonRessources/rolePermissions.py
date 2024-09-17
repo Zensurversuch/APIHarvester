@@ -1,6 +1,6 @@
 from commonRessources.interfaces import UserRole, Permissions
 
-def getPermissionsForRole(role):
+def getPermissionsForRole(role):        # set the permissions for the different roles here
     permissions = []
     if role == UserRole.ADMIN.value:
         permissions = [

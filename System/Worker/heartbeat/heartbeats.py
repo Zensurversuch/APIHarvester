@@ -9,19 +9,22 @@ import threading
 import subprocess
 import docker
 
-logger = setLoggerLevel("WorkerHeartbeats")
-
-client = docker.from_env()
-
+# -------------------------- Environment Variables ------------------------------------------------------------------------------------------------------------------------------------------
 apiKey = getenv('INTERNAL_API_KEY')
 headers = {
     'x-api-key': apiKey
     }
 
-# containerName = getenv('HOSTNAME')
+# --------------------------- Initializations -----------------------------------------------------------------------------------------------------------------------------------------
+logger = setLoggerLevel("WorkerHeartbeats")
+client = docker.from_env()
+
 
 def sendHeartbeat(workerID):
-    """Send a heartbeat to the scheduler to signal that the worker is alive."""
+    """
+    Send a heartbeat to the scheduler to signal that the worker is alive.
+
+    :param workerID: The ID of the worker"""
     try:
         heartbeat_url = f"{COMPOSE_SCHEDULER_API_URL}/heartbeatWorkers"
         data = {
@@ -35,16 +38,27 @@ def sendHeartbeat(workerID):
         logger.error(f"Failed to send heartbeat for worker {workerID}: {e}")
 
 def startHeartbeat(workerID):
-    """Start sending heartbeats at regular intervals."""
-    print("Starting heartbeat for worker", workerID)
-    logger.error(f"Starting heartbeat for worker {workerID}")
+    """
+    Start sending heartbeats at regular intervals.
+    Its purpose is to call sendHeartbeat() at regular intervals.
+
+    :param workerID: The ID of the worker
+    """
+    logger.info("Starting heartbeat for worker", workerID)
     while True:
         sendHeartbeat(workerID)
         time.sleep(SCHEDULER_WORKER_HEARTBEAT_INTERVAL)
 
 def get_container_name():
+    """
+    Get the name of the container.
+    It returns the name of the container in which the script is running instead of returning the GUID of it.
+    The container name is needed because if the container crashes it's entries can be removed from the scheduler which works with the container name.
+
+    :return: The name of the container
+    """
     hostname = socket.gethostname()
-    try:
+    try:        # Get the container name out of the hostname which represents the containers GUID
         result = subprocess.run(
             ["docker", "ps", "--filter", f"id={hostname}", "--format", "{{.Names}}"],
             capture_output=True,

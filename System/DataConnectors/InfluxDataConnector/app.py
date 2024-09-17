@@ -10,20 +10,41 @@ from commonRessources.interfaces import ApiStatusMessages, SubscriptionStatus
 from commonRessources import API_MESSAGE_DESCRIPTOR, COMPOSE_POSTGRES_DATA_CONNECTOR_URL
 from commonRessources.decorators import accessControlApiKey, accessControlJwtOrApiKey
 
+app = Flask(__name__)
+# -------------------------- Environment Variables -----------------------------------------------------------------------------------------------------------------------------------
 apiKey = getenv('INTERNAL_API_KEY')
 headers = {
     'x-api-key': apiKey
 }
-app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = f"{getenv('JWT_SECRET_KEY')}"
 
-jwt = JWTManager(app)
-CORS(app)
+# --------------------------- Initializations -----------------------------------------------------------------------------------------------------------------------------------------
+jwt = JWTManager(app)  # Initializes JWT manager for authentication
+CORS(app)  # Enables Cross-Origin Resource Sharing for API access across different origins
+
 
 # -------------------------- InfluxDB Routes ------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/influxWriteData/<int:apiId>', methods=['POST'])
 @accessControlApiKey
 def influxWriteData(apiId):
+    """
+    This route writes data into an InfluxDB bucket based on the provided API ID which represents
+    the availableApiID that is stored in the PostgreSQL database.
+
+    :param apiId: API ID to identify the associated InfluxDB bucket.
+    :return: A JSON response indicating success or failure of the write operation.
+
+    Request JSON data structure:
+    {
+        "subscriptionID": <str>,  # ID of the subscription
+        "value": <float>,         # Value to be stored in InfluxDB
+        "fetchTimestamp": <str>   # Timestamp when the data was fetched by the worker
+    }
+
+    1. Fetches the subscription data using the subscriptionID.
+    2. Verifies if the subscription is valid and active.
+    3. Writes data into an InfluxDB bucket.
+    """
     data = request.json
     subscriptionID = data.get("subscriptionID")
     value = data.get("value")
@@ -32,7 +53,7 @@ def influxWriteData(apiId):
     if not subscriptionID or not value or not fetchTimestamp:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Missing required fields in the request"}), 400
 
-    # Check if the subscriptionId exists
+    # Check if the given subscriptionId exists
     try:
         response = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}", headers=headers)
         response.raise_for_status()
@@ -44,6 +65,7 @@ def influxWriteData(apiId):
     except requests.RequestException as e:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Error fetching subscription data: {e}"}), 500
 
+    # actual writing process
     now = datetime.now(timezone.utc)
     point = Point(apiId) \
         .tag("subscriptionID", subscriptionID) \
@@ -59,10 +81,19 @@ def influxWriteData(apiId):
     except Exception as e:
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Failed to write data to InfluxDB bucket {bucketName}"}), 500
 
-# timespan (minutes) is used to restrict the query to a certain time period in the past
-@app.route('/influxGetData/<int:subscriptionID>/<int:queryTimespan>', methods=['GET']) 
+@app.route('/influxGetData/<int:subscriptionID>/<int:queryTimespan>', methods=['GET'])
 @accessControlJwtOrApiKey
 def influxGetData(subscriptionID, queryTimespan):
+    """
+    This route retrieves data from an InfluxDB bucket based on the subscription ID and a timespan.
+
+    :param subscriptionID: ID of the subscription to filter data for.
+    :param queryTimespan: Time span in minutes to filter records in the past.
+    :return: A JSON response containing the queried data or an error message.
+
+    1. Fetches the subscription data using the subscriptionID.
+    2. Retrieves data from the associated InfluxDB bucket for the specified time period.
+    """
     # Fetch subscription data to get availableAPIID
     try:
         response = requests.get(f"{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/subscription/{subscriptionID}", headers=headers)
@@ -76,8 +107,9 @@ def influxGetData(subscriptionID, queryTimespan):
     bucketName = f"{apiId}_bucket"
 
     now = datetime.now(timezone.utc)
-    start = now - timedelta(minutes=queryTimespan)         # start for query: query can be restricted in this way
+    start = now - timedelta(minutes=queryTimespan)
 
+    # InfluxDB query for data filtering by subscriptionID and time range
     query = f'''
     from(bucket: "{bucketName}")
         |> range(start: {start.isoformat()}, stop: {now.isoformat()})
@@ -93,16 +125,7 @@ def influxGetData(subscriptionID, queryTimespan):
 
     return jsonify(result), 200
 
-@app.route('/influxGetBuckets', methods=['GET'])
-@accessControlApiKey
-def getBuckets():
-    try:
-        buckets = influxbucketApi.find_buckets_iter()
-        bucketList = [bucket.name for bucket in buckets]
-        return jsonify(bucketList), 200
-    except Exception as e:
-        return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Error fetching buckets from InfluxDB: {e}"}), 500
 
-
-if __name__ == '__main__':
+if __name__ == '__main__':          # Only executed when using the Dockerfile.dev
+                                    # Otherwise, the app is started by the WSGI server
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -1,3 +1,6 @@
+# PostgresDataConnector Development Dockerfile
+# Used for development purposes only.
+# Uses the flask werkzeug development server which is not suitable for production
 FROM python:3.8
 
 WORKDIR /app

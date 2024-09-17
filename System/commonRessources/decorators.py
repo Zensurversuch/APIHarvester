@@ -10,15 +10,28 @@ import logging
 logger = logging.getLogger(__name__)
 
 def userRoles(role, functionName):
+    """
+    Check if a user with the given role has permission to access the specified function.
+    Parameters:
+    - role (str): The role of the user.
+    - functionName (str): The name of the function to check permission for.
+    Returns:
+    - bool: True if the user has permission, False otherwise.
+    """
+    
     currentPermissions = set(getPermissionsForRole(role))
-    logger.error(f"functionName: {functionName}")
-    logger.error(f"currentPermissions: {currentPermissions}")
     if functionName in currentPermissions:
         return True
     else:
         return False
 
 def accessControlJwt(func):
+    """
+    Decorator function that provides access control based on JWT authentication.
+    This is used to restrict access to certain functions based on the role of the user.
+    Raises:
+        403: If access is not permitted.
+    """
     @wraps(func)
     @jwt_required()
     def wrapper(*args, **kwargs):
@@ -33,22 +46,26 @@ def accessControlJwt(func):
     return wrapper
 
 def accessControlJwtOrApiKey(func):
+    """
+    Decorator function that provides access control based on JWT or API key.
+    It is used for API Routes which can be accessed by a user (grants access via JWT)
+    and internal services (grants access via API key).
+    Raises:
+        403: If access is not permitted.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Versuch, JWT aus der Anfrage zu holen
-        jwtValid = False
+        validJwtAvailable = False
         try:
             @jwt_required()
-            def inner_func(*args, **kwargs):
+            def testIfJwtIsPassed(*args, **kwargs):
                 return True
-
-            jwtValid = inner_func(*args, **kwargs)  # JWT-Überprüfung
+            validJwtAvailable = testIfJwtIsPassed(*args, **kwargs)
         except Exception as e:
-            logger.error(f"JWT Header: {request.headers}")
             logger.error(f"JWT validation error: {str(e)}")
-            jwtValid = False  # Falls JWT nicht validiert werden konnte
+            validJwtAvailable = False
 
-        if jwtValid:
+        if validJwtAvailable:            # The access request is from a user with a JWT token
             jwt = get_jwt()
             userRole = jwt.get('role')
             functionName = func.__name__
@@ -56,8 +73,7 @@ def accessControlJwtOrApiKey(func):
                 return func(*args, **kwargs)
             else:
                 return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Access not permitted! {functionName} permission required"}), 403
-        else:
-            # Versuch, den API-Schlüssel zu validieren
+        else:                   # The access request is from an internal service with an API key
             apiKey = request.headers.get('x-api-key')
             if apiKey and apiKey == getenv('INTERNAL_API_KEY'):
                 return func(*args, **kwargs)
@@ -68,6 +84,12 @@ def accessControlJwtOrApiKey(func):
 
 
 def accessControlApiKey(func):
+    """
+    Decorator function for access control based on API key.
+    It is used for API Routes which can only be accessed by internal services.
+    Raises:
+        403: If access is not permitted.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         api_key = request.headers.get('x-api-key')

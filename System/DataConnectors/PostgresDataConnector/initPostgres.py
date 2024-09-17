@@ -2,34 +2,40 @@ from repositories import userRepository, subscriptionRepository, availableApiRep
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from commonRessources.interfaces import UserRole, SubscriptionType
+from commonRessources.logger import setLoggerLevel
 import time
 import hashlib
 from os import getenv
 from dbModels.models import Base, User, AvailableApi
 import sqlalchemy.exc
 
+# -------------------------- Environment Variables -----------------------------------------------------------------------------------------------------------------------------------
 POSTGRES_URL = f"postgresql://{getenv('POSTGRES_USER')}:{getenv('POSTGRES_PASSWORD')}@database/{getenv('POSTGRES_DB')}"
 
-# Postgres Init
+# --------------------------- Initializations -----------------------------------------------------------------------------------------------------------------------------------------
+logger = setLoggerLevel("PostgresInitializer")
 engine = create_engine(POSTGRES_URL)
 userRepo = userRepository.UserRepository(engine)
 subscriptionRepo = subscriptionRepository.SubscriptionRepository(engine)
 availableApiRepo = availableApiRepository.AvailableApiRepository(engine)
 
 def initializePostgres():
-    print("Initializing PostgreSQL DB")
+    """
+    Initialize the PostgreSQL database. Creates the necessary tables and adds initial data into them.
+    """
+    logger.info("Initializing PostgreSQL DB")
     isDatabaseReady = False
     retries = 0
     max_retries = 20  # Set a maximum number of retries
     retry_interval = 2  # Time to wait between retries in seconds
 
     while not isDatabaseReady and retries < max_retries:
-        print(f"Trying to setup PostgreSQL (Attempt {retries + 1}/{max_retries})")
+        logger.info(f"Trying to setup PostgreSQL (Attempt {retries + 1}/{max_retries})")
         try:
             Base.metadata.create_all(engine)
             isDatabaseReady = True
         except sqlalchemy.exc.OperationalError as e:
-            print(f"PostgreSQL is unavailable - retrying in {retry_interval} seconds: {e}")
+            logger.warning(f"PostgreSQL is unavailable - retrying in {retry_interval} seconds: {e}")
             retries += 1
             time.sleep(retry_interval)
 
@@ -37,11 +43,10 @@ def initializePostgres():
         print("Failed to connect to PostgreSQL after several attempts. Exiting.")
         return
 
-    # Add admin user during initial setup
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    try:
+    try:        # Add admin user and available APIs to the database
         if session.query(User).count() == 0:
             email = getenv('USER_EMAIL')
             password = getenv('USER_PASSWORD')
@@ -63,7 +68,7 @@ def initializePostgres():
         else:
             print("Admin user already exists.")
 
-        if session.query(AvailableApi).count()==0:
+        if session.query(AvailableApi).count()==0:      # New APIs have to be added here
             availableApi1 = AvailableApi(
                 availableApiID=1,
                 url="https://finnhub.io/api/v1/quote?symbol=AAPL",
@@ -73,7 +78,6 @@ def initializePostgres():
                 subscriptionType=SubscriptionType.FREE,
                 relevantFields=["c", "d", "dp", "h", "l", "o", "pc", "t"]
             )
-        
             availableApi2 = AvailableApi(
                 availableApiID=2,
                 url="https://finnhub.io/api/v1/quote?symbol=IBM",
@@ -83,7 +87,6 @@ def initializePostgres():
                 subscriptionType=SubscriptionType.FREE,
                 relevantFields=["c", "d", "dp", "h", "l", "o", "pc", "t"]
             )
-
             availableApi3 = AvailableApi(
                 availableApiID=3,
                 url="https://api.open-meteo.com/v1/forecast?latitude=48.6767637&longitude=10.152923&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,rain,cloud_cover,wind_speed_10m",
@@ -93,7 +96,6 @@ def initializePostgres():
                 subscriptionType=SubscriptionType.FREE,
                 relevantFields=["temperature_2m", "relative_humidity_2m", "dew_point_2m", "apparent_temperature", "precipitation_probability", "precipitation", "rain", "cloud_cover", "wind_speed_10m"]
             )
-
             availableApi4 = AvailableApi(
                 availableApiID=4,
                 url="https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=IBM",
