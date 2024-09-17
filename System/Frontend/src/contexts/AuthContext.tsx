@@ -44,14 +44,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return Boolean(auth.token);
   };
 
-  
   // Check JWT token and return it
   const getAndCheckToken = () => {
     checkToken();
      return auth.token;
    }
 
-  // Check if JWT token is valid an not expired. If expired logout user 
+  // Check if JWT token is valid an not expired. If expired logout the user
   const checkToken = () => {
     if (auth.token) {
       try {

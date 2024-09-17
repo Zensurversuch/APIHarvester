@@ -78,7 +78,7 @@ const DisplayData: React.FC = () => {
       }
     }, [selectedApi, timespan, subscriptionID, apiLoading]);
 
-  // check if time timespan is in range and set timespan  
+  // check if the selected timespan is in range and set timespan  
   const handleTimespanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     if (value < 1) {
@@ -105,7 +105,7 @@ const DisplayData: React.FC = () => {
     </div>
   );
 
-  // Convert API fetch data displayable
+  // Convert the fetched API data in order to show them in the right format
   const parsedData = data.map(point => {
     try {
       const parsedValue = JSON.parse(point.value);

@@ -32,7 +32,7 @@ const Register: React.FC = () => {
     );
   };
 
-  // navigate user to login if register sussesfull or throw an error message
+  // navigate user to login if the registration was successfull otherwise throw an error message
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!validatePassword(password)) {

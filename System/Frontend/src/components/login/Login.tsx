@@ -16,7 +16,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-// show a message if the register site or the jwt checkt throws one
+// returns feedback to the user if the register site or the jwt check send a message
   useEffect(() => {
     if (location.state && location.state.message) {
       setMessage(location.state.message);
@@ -24,7 +24,7 @@ const Login: React.FC = () => {
     }
   }, [location.state]);
 
-  // navigate user to home by succesfull login
+  // navigate user to home menu if the login was successful
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {

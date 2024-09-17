@@ -77,7 +77,7 @@ const SubscriptionTable: React.FC = () => {
     }
   };
 
-    // Unsubscribe an inactive API subscription
+    // Unsubscribe an active API subscription
   const handleUnsubscribe = async (subscriptionID: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
