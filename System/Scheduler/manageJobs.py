@@ -1,6 +1,5 @@
 import jobCounter
 import scale
-import lockConfigFile
 import configparser
 import docker
 import time
@@ -14,6 +13,9 @@ logger = setLoggerLevel("JobManager")
 dockerClient = docker.from_env()
 
 # --------------------------- Job Management Functions -----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 def addJob(jobName, interval, command, container):
     """
     Adds a new job to the Ofelia configuration file, which looks like this:
