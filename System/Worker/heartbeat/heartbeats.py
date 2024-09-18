@@ -44,7 +44,13 @@ def startHeartbeat(workerID):
 
     :param workerID: The ID of the worker
     """
-    logger.info("Starting heartbeat for worker", workerID)
+    logger.info(f"Starting heartbeat for worker: {workerID}")
+    # call the heartbeatWorkerStartup endpoint to signal the scheduler that the worker is starting up 
+    # so that it can delete the worker from the list of dead workers
+    response = requests.post(f"{COMPOSE_SCHEDULER_API_URL}/heartbeatWorkerStartup", 
+                             json={"workerID": workerID},
+                             headers=headers)
+    response.raise_for_status()
     while True:
         sendHeartbeat(workerID)
         time.sleep(SCHEDULER_WORKER_HEARTBEAT_INTERVAL)

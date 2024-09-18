@@ -16,9 +16,11 @@ const SubscriptionTable: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'success' | 'failure'>('success');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const navigate = useNavigate();
 
-  // load Subscription from backend
+  // Load Subscription from backend
   const loadSubscriptions = async () => {
     if (userID) {
       setLoading(true);
@@ -44,14 +46,14 @@ const SubscriptionTable: React.FC = () => {
     api: apiData.find(api => api.availableApiID === sub.availableApiID)
   }));
 
-  // opens the API details modal and not the fetch data site
+  // Opens the API details modal and not the fetch data site
   const handleApiNameClick = (api: ApiData, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedApi(api);
     setShowModal(true);
   };
 
-  // close the API details modal
+  // Close the API details modal
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedApi(null);
@@ -67,7 +69,7 @@ const SubscriptionTable: React.FC = () => {
     e.stopPropagation();
     try {
       await resubscribe(getAndCheckToken(), subscriptionID);
-      setStatusMessage('Resubscribeing successful!');
+      setStatusMessage('Resubscription successful!');
       setStatusType('success');
       const data = await fetchSubscriptions(getAndCheckToken(), userID);
       setSubscriptions(data);
@@ -77,21 +79,52 @@ const SubscriptionTable: React.FC = () => {
     }
   };
 
-    // Unsubscribe an active API subscription
+  // Unsubscribe an active API subscription
   const handleUnsubscribe = async (subscriptionID: number, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await unsubscribe(getAndCheckToken(), subscriptionID)
-      setStatusMessage('Unsubscribing  successful!');
+      await unsubscribe(getAndCheckToken(), subscriptionID);
+      setStatusMessage('Unsubscription successful!');
       setStatusType('success');
       loadSubscriptions();
     } catch (error) {
       if (error instanceof Error) {
-          setStatusMessage(error.message);
+        setStatusMessage(error.message);
+      } else {
+        setStatusMessage('An unknown error occurred.');
+      }
+      setStatusType('failure');
+    }
+  };
+
+  // Sort handling logic
+  const handleSort = (column: string) => {
+    if (['subscriptionID', 'container', 'status'].includes(column)) {
+      const direction = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc';
+      setSortColumn(column);
+      setSortDirection(direction);
+
+      const sortedData = [...combinedData].sort((a, b) => {
+        const aValue = a.subscription[column as keyof Subscription];
+        const bValue = b.subscription[column as keyof Subscription];
+
+        // Determine if the values should be treated as numbers or strings
+        const isNumeric = !isNaN(Number(aValue)) && !isNaN(Number(bValue));
+
+        if (isNumeric) {
+          // Handle numeric sorting
+          const numA = Number(aValue);
+          const numB = Number(bValue);
+          return direction === 'asc' ? numA - numB : numB - numA;
         } else {
-          setStatusMessage('An unknown error occurred.');
+          // Handle string sorting
+          if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+          return 0;
         }
-        setStatusType('failure');
+      });
+
+      setSubscriptions(sortedData.map(item => item.subscription));  // Update subscriptions
     }
   };
 
@@ -118,15 +151,45 @@ const SubscriptionTable: React.FC = () => {
           onClose={() => setStatusMessage(null)} // Clear message on close
         />
       )}
+      <div className="mb-4" style={{ width: '50%', margin: '0 auto' }}>
+        <Alert variant="info" className="text-center" style={{ margin: 0 }}>
+          <p style={{ margin: 0 }}>
+            <strong>Information:</strong>
+          </p>
+          <p style={{ margin: 0 }}>
+            <span>&#8226;</span> Click on a column header to sort the data.
+          </p>
+          <p style={{ margin: 0 }}>
+            <span>&#8226;</span> Clicking on "API Name" will show detailed information about the API.
+          </p>
+          <p style={{ margin: 0 }}>
+            <span>&#8226;</span> Click on a row to view data collected by the subscription.
+          </p>
+        </Alert>
+      </div>
+
+
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>Subscription ID</th>
-            <th>API Name</th>
-            <th>Interval</th>
-            <th>Job Name</th>
-            <th>Executing Container</th>
-            <th>Status</th>
+            <th onClick={() => handleSort('subscriptionID')}>
+              Subscription ID {sortColumn === 'subscriptionID' ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
+            </th>
+            <th>
+              API Name
+            </th>
+            <th>
+              Interval
+            </th>
+            <th>
+              Job Name
+            </th>
+            <th onClick={() => handleSort('container')}>
+              Executing Container {sortColumn === 'container' ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
+            </th>
+            <th onClick={() => handleSort('status')}>
+              Status {sortColumn === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
+            </th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -182,8 +245,8 @@ const SubscriptionTable: React.FC = () => {
                   variant="secondary"
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.location.href = `mailto:apiharvester@gmail.com?subject=Help%20Request&body=Please%20describe%20your%20issue%20with%20subscription%20${subscription.subscriptionID}%20here.`;}}
-                >
+                    window.location.href = `mailto:apiharvester@gmail.com?subject=Help%20Request&body=Please%20describe%20your%20issue%20with%20subscription%20${subscription.subscriptionID}%20here.`;}
+                  }>
                   Help
                 </Button>             
                 )}
@@ -200,13 +263,13 @@ const SubscriptionTable: React.FC = () => {
         <Modal.Body>
           {selectedApi ? (
             <div>
-              <h5>{selectedApi.description}</h5>
-              <p><strong>Subscription Type:</strong> {selectedApi.subscriptionType}</p>
-              <p><strong>URL:</strong> {selectedApi.url}</p>
-              <p><strong>Relevant Fields:</strong> {selectedApi.relevantFields.join(', ')}</p>
+              <h5>{selectedApi.name}</h5>
+              <p><strong>ID:</strong> {selectedApi.availableApiID}</p>
+              <p><strong>Description:</strong> {selectedApi.description}</p>
+              {/* Add any other details you want to display about the API */}
             </div>
           ) : (
-            <p>No API selected</p>
+            <p>No API details available.</p>
           )}
         </Modal.Body>
         <Modal.Footer>

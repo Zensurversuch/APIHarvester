@@ -73,6 +73,8 @@ def subscribeApi():
         while not lockConfigFile.acquireLock():  # If the config file is locked, wait
             time.sleep(0.5)
 
+        checkContainersAlive()
+
         containerName = scale.scaleWorkers()    # scale the jobs across the worker containers
 
         if not containerName:
@@ -102,6 +104,8 @@ def subscribeApi():
         containerName = scale.scaleWorkers()
 
 
+        manageJobs.addJob(jobName, interval, command, containerName)        # add the job to ofelia
+
         #set the jobName, command and container in the subscription
         subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', 
                                              json={
@@ -113,8 +117,6 @@ def subscribeApi():
                                                    },
                                              headers=headers)
         subscriptionResponse.raise_for_status()
-
-        manageJobs.addJob(jobName, interval, command, containerName)        # add the job to ofelia
 
         lockConfigFile.releaseLock()
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Job {jobName} scheduled and subscription for API {apiName}; API_ID: {apiID} created"}), 200
@@ -138,6 +140,9 @@ def resubscribeApi(subscriptionID):
             while not lockConfigFile.acquireLock():  # If the config file is locked, wait
                 time.sleep(0.5)
             jobName = f"job{jobCounter.getHistoricalJobCounter()}"
+
+            checkContainersAlive()
+
             containerName = scale.scaleWorkers()
 
             if not containerName:
@@ -230,8 +235,32 @@ def receive_heartbeat():
         logger.error("Invalid heartbeat data")
         return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.ERROR}Invalid heartbeat data"}), 400
 
-def check_heartbeats():
-    """Periodically check if all workers are sending heartbeats within the expected time."""
+@app.route('/heartbeatWorkerStartup', methods=['POST'])
+@accessControlApiKey
+def receive_startup_heartbeat():
+    """
+    Receive heartbeat from a worker at startup.
+
+    This is used e.g. if a worker is restarted so that the scheduler checks the heartbeats directly 
+    in order to delete the worker container from the NOT_WORKING_CONTAINERS set.
+
+    JSON request data structure:
+    {
+        "workerID": str        # ID of the worker sending the heartbeat
+    }
+    """
+    data = request.get_json()
+    workerID = data.get('workerID')
+
+    if workerID in redisClient.smembers("NOT_WORKING_CONTAINERS"):
+                    redisClient.srem("NOT_WORKING_CONTAINERS", workerID)
+    return jsonify({API_MESSAGE_DESCRIPTOR: f"{ApiStatusMessages.SUCCESS}Startup heartbeat successfully"}), 200
+
+
+def checkHeartbeats():
+    """
+    Periodically check if all workers are sending heartbeats within the expected time.
+    """
     while True:
         now = datetime.now(timezone.utc)
         heartbeats = redisClient.hgetall('heartbeats')
@@ -246,15 +275,34 @@ def check_heartbeats():
                 scale.balanceJobsAcrossWorkers()
             else:
                 # if the worker is in NOT_WORKING_CONTAINERS but is sending heartbeats again, remove it from the set
-                if workerID.encode('utf-8') in redisClient.smembers("NOT_WORKING_CONTAINERS"):
+                if workerID in redisClient.smembers("NOT_WORKING_CONTAINERS"):
                     redisClient.srem("NOT_WORKING_CONTAINERS", workerID)
                 logger.info(f"{now.time()}: Worker {workerID} is alive (last seen {lastHeartbeat})")
 
         time.sleep(SCHEDULER_WORKER_HEARTBEAT_INTERVAL)     # Sleep before checking again
 
+def checkContainersAlive():
+    """
+    Check which of the containers are still alive.
+    In comparison to the checkHeartbeats function, this function is only called when a new job is scheduled and 
+    isn't executed periodically.
+    And it doesn't checks if last heartbeat was sent in SCHEDULER_WORKER_HEARTBEAT_INTERVAL*2
+    this one checks if the last heartbeat was sent in SCHEDULER_WORKER_HEARTBEAT_INTERVAL because the chance to schedule
+    a job on a dead container gets smaller if no heartbeat could be missed like it's checked in this function
+    """
+    now = datetime.now(timezone.utc)
+    heartbeats = redisClient.hgetall('heartbeats')
+
+    # Iterate over all workers and check if they sent a heartbeat within the expected time
+    for workerID, lastHeartbeat in heartbeats.items():
+        lastHeartbeat = datetime.fromisoformat(lastHeartbeat)
+        # Last heartbeat has to be send within 2*SCHEDULER_WORKER_HEARTBEAT_INTERVAL so one heartbeat can be missed
+        if (now - lastHeartbeat).total_seconds() > (SCHEDULER_WORKER_HEARTBEAT_INTERVAL):
+            logger.error(f"Worker {workerID} missed heartbeat! Last seen at {lastHeartbeat}")
+            redisClient.sadd("NOT_WORKING_CONTAINERS", workerID)
 
 # Create a new thread for the check_heartbeats function in order to not block the main API functions
-heartbeat_thread = threading.Thread(target=check_heartbeats)
+heartbeat_thread = threading.Thread(target=checkHeartbeats)
 heartbeat_thread.daemon = False
 heartbeat_thread.start()
 
