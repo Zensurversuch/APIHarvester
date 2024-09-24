@@ -56,8 +56,8 @@ def initializePostgres():
                     userID=1,
                     email=email,
                     password=hashlib.sha256(password.encode('utf-8')).hexdigest(),
-                    lastName='Last1',
-                    firstName='First1',
+                    lastName='Admin',
+                    firstName='Admin',
                     role=UserRole.ADMIN
                 )
                 session.add(user)

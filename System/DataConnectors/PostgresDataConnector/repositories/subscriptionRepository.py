@@ -76,7 +76,7 @@ class SubscriptionRepository:
         except SQLAlchemyError as e:
             print(f"SubscriptionRepository: An error occurred while creating the subscription: {e}")
             session.rollback()
-            return False
+            return False, None
         finally:
             session.close()
 

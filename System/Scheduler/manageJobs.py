@@ -63,9 +63,9 @@ def deleteJob(jobName):
         config.remove_section(sectionName)
         with open(CONFIG_FILE, 'w') as configfile:
             config.write(configfile)
-        refreshOfelia()
         jobCounter.updateActiveJobCounter(False)
         scale.balanceJobsAcrossWorkers()
+        refreshOfelia()
         return True
     else:
         return False

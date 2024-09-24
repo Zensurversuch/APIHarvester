@@ -157,7 +157,7 @@ def balanceJobsAcrossWorkers():
                     subscriptionResponse = requests.post(f'{COMPOSE_POSTGRES_DATA_CONNECTOR_URL}/setSubscriptionsStatus', json={
                         'subscriptionID': subscriptionID,
                         'subscriptionStatus': SubscriptionStatus.INACTIVE.value,
-                        'jobName': jobName,
+                        'jobName': None,
                         'container': None
                     }, headers=headers)
                     subscriptionResponse.raise_for_status()

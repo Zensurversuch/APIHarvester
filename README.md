@@ -1,17 +1,19 @@
 # API Harvester
 
 ## Short Description
-API Harvester allows periodic collection and visualization of data from pre-configured API endpoints. New APIs can be easily added to expand the platform.
+API Harvester allows periodic collection and visualization of data from pre-configured API endpoints. New APIs can be added by the admins to expand the plattform.
 
 ## Deployment
 ### Starting the application
 Requirements:
-Python installed (https://www.python.org/downloads/)
 Docker installed (https://docs.docker.com/get-docker/)
 
 Procedure (the deployment process is completed with a single command):
 
 1. Download the repository
+```bash
+git clone https://github.com/Zensurversuch/APIHarvester.git
+```
 2. Create the needed `.env` file as described [here](#setup-environment)
 3. Create the needed `apikeys.txt` file as described [here](#api-keys-secrets)
 4. Navigate to the folder (/System)
@@ -35,8 +37,9 @@ docker-compose down
    ```bash
    docker volume rm $(docker volume ls -q)
    ```
-4. Delete the entries in the config.ini file which is located under [System\Scheduler\\.config\config.ini](System/Scheduler/.config/config.ini)  
-   (This has to be done because the entries in this file are related to the database subscription entries. The casual behaviour is that both entries are deleted through the frontend)
+4. Delete the entries in the config.ini file which is located under [System\Scheduler\\.config\config.ini](System/Scheduler/.config/config.ini)
+   If this is not done the System behaves wrong when starting it again
+   (This has to be done because the entries in this file are related to the database subscription entries. And the database entries are deleted by deleting the volumes. The casual behaviour is that both entries are deleted through the frontend)
 
 
 ## Setup environment
@@ -53,25 +56,34 @@ docker-compose down
     ENV=<prod | dev>                          # Environment mode: 'dev' for development, 'prod' for production
 
     #PostgreSQL variables
-    POSTGRES_PASSWORD=<password>                    # Set the password for your PostgreSQL database
+    POSTGRES_PASSWORD=<password>              # Set the password for your PostgreSQL database
     USER_EMAIL= <e-mail>                      # Set the E-Mail for the first Application User (optional)
     USER_PASSWORD = <password>                # Set the Password for the first Application User (optional)
 
     # InfluxDB variables
-    INFLUXDB_ADMIN_USER=<admin user name>
-    INFLUXDB_ADMIN_PASSWORD=<admin user password>
-    INFLUXDB_ORG=apiHarvester
-    INFLUXDB_TOKEN=<token>
+    INFLUXDB_ADMIN_USER=<admin user name>           # Admin username for accessing InfluxDb
+    INFLUXDB_ADMIN_PASSWORD=<admin user password>   # Admin password for accessing InfluxDb
+    INFLUXDB_ORG=apiHarvester                       # Name of the InfluxDb organization
+    INFLUXDB_TOKEN=<token>                          # authentificationtoken for InfluxDb
 
     MAX_NUMBER_WORKERS=<number>   # The amount of worker containers has to be set here
     ```
 
 ### API Keys secrets
-Create a file containing all the required API keys as a key-value file. It should be located under `System/apikeys.txt` and formatted as follows:
+Create a file containing all the required API keys as a key-value file. It should be located under `System/apikeys.txt` and formatted as follows:  
 
 ``` text
 FINNHUB_KEY=<finnhub api key>
-ALPHA_VANTAGE_KEY=<alpha vantage api key>
+ALPHAVANTAGE_KEY=<alpha vantage api key>
+```
+**_NOTE:_** If you add a new API by adding the data in the [System\DataConnectors\PostgresDataConnector\initPostgres.py](initPostgres.py) script make sure you do the following:
+* if you use 'WeatherAndStarApi XY' as the APIName, the entry in apikeys.txt has to be WEATHERANDSTARAPI=KeyXy  (The point is that while fetching the API the workers search the Key in the apikeys.txt by using the ApiName in the database until space)
+* if the new added api needs a Key you have to adapt the method fetchApi() [System\Worker\fetchScripts\fetchApis.py](fetchApis.py) because different APIs have other names for the API key parameter. Therefore add the Api in the switch case statement and add how the API key parameter is named:
+```python
+if availableApiName == 'FINNHUB':                     # Different APIs require different query parameters in order to pass the API token
+  response = requests.get(f"{url}&token={apiToken}")
+elif availableApiName == 'ALPHAVANTAGE':
+  response = requests.get(f"{url}&apikey={apiToken}")
 ```
 
 ## Current fetchable API's
@@ -95,8 +107,7 @@ ALPHA_VANTAGE_KEY=<alpha vantage api key>
     "o": 184.55,  // Open - Price at market open.
     "pc": 189.12, // Previous Close - Price at the previous market close.
     "t": 1722888002 // Timestamp - Unix timestamp of the last update.
-}
-
+    }
   ```
 
 
@@ -107,16 +118,14 @@ ALPHA_VANTAGE_KEY=<alpha vantage api key>
   We may give the option that the client is able to fetch all the stocks he wants, in the future
 
 ### API's which will be added in the future:
-
-
-
+- At the moment none
 
 ## Features
+- User registration
 - Selection from a list of pre-configured APIs.
 - Administrators can expand the API list.
 - Users can select APIs to fetch data from, specifying the fetch frequency. These API queries are executed periodically, and data is stored in a Time-Series Database (InfluxDB).
-- Users can set threshold values. If an API value crosses these thresholds, it's stored in a separate database (PostgreSQL). Upon subsequent logins, users can see when these thresholds were crossed based on timestamps and their last login.
-- Dashboard for visualization and threshold monitoring.
+- Dashboard for visualization.
 
 ## Git Rules
 - **Branching**: Use the format `Storynumber-Storyname` or `Tasknumber-Storyname` or `Storynumber-Tasknumber-Storyname`

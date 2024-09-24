@@ -87,7 +87,7 @@ def subscribeApi():
                                                  'userID': userID,
                                                  'availableApiID': apiID,
                                                  'interval': interval,
-                                                 'status': SubscriptionStatus.ACTIVE.value,
+                                                 'status': SubscriptionStatus.ACTIVE.value
                                                  },
                                              headers=headers)
         subscriptionResponse.raise_for_status()
@@ -101,7 +101,7 @@ def subscribeApi():
             command = f"python /app/fetchScripts/fetchApis.py --url {apiUrl} --tokenRequired {apiTokenRequired} --subscriptionID {subscriptionID} --apiID {apiID}"
 
         jobName = f"job{jobCounter.getHistoricalJobCounter()}"
-        containerName = scale.scaleWorkers()
+
 
 
         manageJobs.addJob(jobName, interval, command, containerName)        # add the job to ofelia
@@ -271,8 +271,15 @@ def checkHeartbeats():
             # Last heartbeat has to be send within 2*SCHEDULER_WORKER_HEARTBEAT_INTERVAL so one heartbeat can be missed
             if (now - lastHeartbeat).total_seconds() > (SCHEDULER_WORKER_HEARTBEAT_INTERVAL * 2):
                 logger.error(f"Worker {workerID} missed heartbeat! Last seen at {lastHeartbeat}")
-                redisClient.sadd("NOT_WORKING_CONTAINERS", workerID)
-                scale.balanceJobsAcrossWorkers()
+                if workerID not in redisClient.smembers("NOT_WORKING_CONTAINERS"):      # Just rebalance the jobs the first time a container is consired as not working
+                    redisClient.sadd("NOT_WORKING_CONTAINERS", workerID)
+                    while not lockConfigFile.acquireLock():  # If the config file is locked, wait
+                        time.sleep(0.5)
+                    
+                    scale.balanceJobsAcrossWorkers()
+
+                    lockConfigFile.releaseLock()
+                    manageJobs.refreshOfelia()
             else:
                 # if the worker is in NOT_WORKING_CONTAINERS but is sending heartbeats again, remove it from the set
                 if workerID in redisClient.smembers("NOT_WORKING_CONTAINERS"):
